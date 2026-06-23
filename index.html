@@ -1084,8 +1084,9 @@ body {
 /* Reset body conflict */
 body { margin:0; }
 .bc-app { display:none; }
-.bc-app.active { display:block; }
-#bc-stockshift.active { display:flex; flex-direction:column; }
+.bc-app.active { display:block; min-height:calc(100vh - 46px); }
+#bc-stockshift.active { display:flex; flex-direction:column; min-height:calc(100vh - 46px); }
+#bc-listingforge.active .layout { min-height:calc(100vh - 46px - 49px); }
 </style>
 </head>
 <body>
@@ -1102,14 +1103,7 @@ body { margin:0; }
 
 <!-- LISTINGFORGE -->
 <div id="bc-listingforge" class="bc-app">
-<header>
-  <div><div class="logo">ListingForge</div><div class="logo-sub">FB Marketplace Generator</div></div>
-  <div class="hsp"></div>
-
-  
-  
-  
-</header>
+<!-- LF header hidden -->
 <div class="layout">
 <div class="sb">
   <div class="ss">
@@ -1872,15 +1866,7 @@ document.addEventListener('dragover',function(e){e.preventDefault();});
 document.addEventListener('drop',function(e){e.preventDefault();});
 </script>
 
-<div class="hdr">
-  <div class="logo">Photo<span>Shift</span></div>
-  <div class="vbadge">v18</div>
-  <div class="hsp"></div>
-  
-  
-  
-  
-</div>
+<!-- PS header hidden -->
 
 <div class="main">
 <div class="sb">
@@ -1997,12 +1983,12 @@ function addLocToList(name,chk){
   var d=document.createElement('div');
   d.className='li'+(chk?' chk':''); d.dataset.loc=name;
   d.innerHTML='<div class="lck">'+(chk?'✓':'')+'</div><span>'+name+'</span><span class="ldel">✕</span>';
-  d.querySelector('.ldel').addEventListener('click',function(e){e.stopPropagation();d.remove();saveLocs();updBtn();});
+  d.querySelector('.ldel').addEventListener('click',function(e){e.stopPropagation();d.remove();saveLocs();ssUpdBtn();});
   d.addEventListener('click',function(e){
     if(e.target.classList.contains('ldel'))return;
     d.classList.toggle('chk');
     d.querySelector('.lck').textContent=d.classList.contains('chk')?'✓':'';
-    saveLocs();updBtn();updPrev();
+    saveLocs();ssUpdBtn();updPrev();
   });
   list.appendChild(d);
 }
@@ -2010,7 +1996,7 @@ function addLoc(){
   var inp=document.getElementById('ali');
   var val=inp.value.trim().replace(/\s+/g,'_');
   if(!val)return;
-  addLocToList(val,true);saveLocs();inp.value='';updBtn();
+  addLocToList(val,true);saveLocs();inp.value='';ssUpdBtn();
 }
 function updPrev(){
   var date=document.getElementById('sDate').value||'DATE';
@@ -2034,7 +2020,7 @@ function handleFiles(fl){
     files.push({id:id,file:f,name:f.name,url:URL.createObjectURL(f),isVid:f.type.startsWith('video/')});
     selIds.add(id);
   });
-  renderShelf();updBtn();
+  renderShelf();ssUpdBtn();
 }
 function renderShelf(){
   var s=document.getElementById('shelf');
@@ -2045,12 +2031,12 @@ function renderShelf(){
     d.className='pt'+(selIds.has(f.id)?' sel':'');
     if(f.isVid){d.innerHTML='<div class="vt">🎬</div><div style="flex:1;min-width:0"><div class="pt-name">'+f.name+'</div><div class="pt-meta">video</div></div><span class="pt-del">✕</span>';}
     else{d.innerHTML='<img src="'+f.url+'" alt=""><div style="flex:1;min-width:0"><div class="pt-name">'+f.name+'</div><div class="pt-meta">photo</div></div><span class="pt-del">✕</span>';}
-    d.querySelector('.pt-del').addEventListener('click',function(e){e.stopPropagation();files=files.filter(function(x){return x.id!==f.id;});selIds.delete(f.id);renderShelf();updBtn();});
-    d.addEventListener('click',function(e){if(e.target.classList.contains('pt-del'))return;selIds.has(f.id)?selIds.delete(f.id):selIds.add(f.id);d.classList.toggle('sel');updBtn();});
+    d.querySelector('.pt-del').addEventListener('click',function(e){e.stopPropagation();files=files.filter(function(x){return x.id!==f.id;});selIds.delete(f.id);renderShelf();ssUpdBtn();});
+    d.addEventListener('click',function(e){if(e.target.classList.contains('pt-del'))return;selIds.has(f.id)?selIds.delete(f.id):selIds.add(f.id);d.classList.toggle('sel');ssUpdBtn();});
     s.appendChild(d);
   });
 }
-function updBtn(){document.getElementById('gb').disabled=!(selIds.size>0&&getChkLocs().length>0);}
+function ssUpdBtn(){document.getElementById('gb').disabled=!(selIds.size>0&&getChkLocs().length>0);}
 function setVar(n,btn){varCount=n;document.querySelectorAll('.vb').forEach(function(b){b.classList.remove('act');});btn.classList.add('act');}
 
 // ── EXIF ───────────────────────────────────────────────────────────────────
@@ -2337,17 +2323,7 @@ function renderDebugLog(){
 <div class="toast" id="toast"></div>
 
 <!-- TOP BAR -->
-<div class="topbar">
-  <div class="topbar-logo">Stock<span>Shift</span></div>
-  <div class="topbar-right">
-    
-    
-    
-    <button class="tb-btn" onclick="showView('export')">Export</button>
-    <button class="tb-btn green" onclick="importData()">Import</button>
-    <input type="file" id="importInput" accept=".json" style="display:none" onchange="handleImport(this)">
-  </div>
-</div>
+<!-- SS topbar hidden -->
 
 <!-- QUICK ENTRY VIEW -->
 <div class="view active" id="view-quick">
@@ -3743,82 +3719,7 @@ function shuffleArr(arr,seed){
   return a;
 }
 
-// ── RENDER SIDEBAR ───────────────────────────────────────────────────────────
-(function(){
-  var pl=document.getElementById('prodList');
-  PRODUCTS.forEach(function(p,i){
-    var d=document.createElement('div');
-    d.className='prod-card'+(i===0?' active':'');
-    d.dataset.id=p.id;
-    d.innerHTML='<div class="prod-name">'+p.name+'</div>'
-      +'<div style="display:flex;gap:8px;margin-top:3px;">'
-      +'<span class="prod-code">'+p.code+'</span>'
-      +'<span class="prod-price">'+(p.priceEach||'price TBD')+'</span>'
-      +'</div>';
-    d.addEventListener('click',function(){
-      d.classList.toggle('active');
-      updateLocSKUs();
-      updBtn();
-    });
-    pl.appendChild(d);
-  });
-
-  var ll=document.getElementById('locList');
-  LOCATIONS.forEach(function(loc){
-    var settings=getLocSettings(loc.id);
-    var wrap=document.createElement('div');
-    wrap.className='loc-item';
-    wrap.dataset.id=loc.id;
-
-    var hdr=document.createElement('div');
-    hdr.className='loc-header';
-    hdr.innerHTML='<div class="lck"></div>'
-      +'<span class="loc-name">'+loc.name+'</span>'
-      +'<span class="loc-sku" id="lsku-'+loc.id+'">--</span>'
-      +'<button class="loc-edit-btn" data-loc="'+loc.id+'">✎</button>';
-
-    // Toggle check on header click (not edit button)
-    hdr.addEventListener('click',function(e){
-      if(e.target.classList.contains('loc-edit-btn')) return;
-      wrap.classList.toggle('chk');
-      hdr.querySelector('.lck').textContent=wrap.classList.contains('chk')?'✓':'';
-      updBtn();
-    });
-
-    // Editor panel
-    var editor=document.createElement('div');
-    editor.className='loc-editor';
-    editor.id='editor-'+loc.id;
-    editor.innerHTML='<div class="le-field"><label>Pickup location text</label>'
-      +'<textarea id="le-pickup-'+loc.id+'" rows="2">'+escH(settings.pickup||'')+'</textarea></div>'
-      +'<div class="le-field"><label>Delivery note (leave blank to omit)</label>'
-      +'<input type="text" id="le-delivery-'+loc.id+'" value="'+escH(settings.delivery||'')+'"></div>'
-      +'<button class="le-save" data-loc="'+loc.id+'">Save</button>';
-
-    // Edit button toggle
-    hdr.querySelector('.loc-edit-btn').addEventListener('click',function(e){
-      e.stopPropagation();
-      editor.classList.toggle('open');
-    });
-
-    // Save button
-    editor.querySelector('.le-save').addEventListener('click',function(){
-      var s={
-        pickup: document.getElementById('le-pickup-'+loc.id).value.trim(),
-        delivery: document.getElementById('le-delivery-'+loc.id).value.trim(),
-        includeDelivery: !!document.getElementById('le-delivery-'+loc.id).value.trim()
-      };
-      saveLocSettings(loc.id, s);
-      editor.classList.remove('open');
-    });
-
-    wrap.appendChild(hdr);
-    wrap.appendChild(editor);
-    ll.appendChild(wrap);
-  });
-
-  updateLocSKUs();
-})();
+// duplicate render sidebar removed
 
 function updateLocSKUs(){
   var prod=getActiveProd();
@@ -3838,11 +3739,7 @@ function getChkLocs(){
     return LOCATIONS.find(function(l){return l.id===el.dataset.id;});
   });
 }
-function updBtn(){
-  var btn=document.getElementById('genBtn');
-  btn.disabled=!(getActiveProds().length>0&&getChkLocs().length>0);
-  if(!btn.disabled) btn.textContent='Generate Listings →';
-}
+// duplicate updBtn removed
 
 // ── GENERATE ─────────────────────────────────────────────────────────────────
 async function generate(){
@@ -4195,12 +4092,12 @@ function addLocToList(name,chk){
   var d=document.createElement('div');
   d.className='li'+(chk?' chk':''); d.dataset.loc=name;
   d.innerHTML='<div class="lck">'+(chk?'✓':'')+'</div><span>'+name+'</span><span class="ldel">✕</span>';
-  d.querySelector('.ldel').addEventListener('click',function(e){e.stopPropagation();d.remove();saveLocs();updBtn();});
+  d.querySelector('.ldel').addEventListener('click',function(e){e.stopPropagation();d.remove();saveLocs();psUpdBtn();});
   d.addEventListener('click',function(e){
     if(e.target.classList.contains('ldel'))return;
     d.classList.toggle('chk');
     d.querySelector('.lck').textContent=d.classList.contains('chk')?'✓':'';
-    saveLocs();updBtn();updPrev();
+    saveLocs();psUpdBtn();updPrev();
   });
   list.appendChild(d);
 }
@@ -4208,7 +4105,7 @@ function addLoc(){
   var inp=document.getElementById('ali');
   var val=inp.value.trim().replace(/\s+/g,'_');
   if(!val)return;
-  addLocToList(val,true);saveLocs();inp.value='';updBtn();
+  addLocToList(val,true);saveLocs();inp.value='';psUpdBtn();
 }
 function updPrev(){
   var date=document.getElementById('sDate').value||'DATE';
@@ -4232,7 +4129,7 @@ function handleFiles(fl){
     files.push({id:id,file:f,name:f.name,url:URL.createObjectURL(f),isVid:f.type.startsWith('video/')});
     selIds.add(id);
   });
-  renderShelf();updBtn();
+  renderShelf();psUpdBtn();
 }
 function renderShelf(){
   var s=document.getElementById('shelf');
@@ -4243,12 +4140,12 @@ function renderShelf(){
     d.className='pt'+(selIds.has(f.id)?' sel':'');
     if(f.isVid){d.innerHTML='<div class="vt">🎬</div><div style="flex:1;min-width:0"><div class="pt-name">'+f.name+'</div><div class="pt-meta">video</div></div><span class="pt-del">✕</span>';}
     else{d.innerHTML='<img src="'+f.url+'" alt=""><div style="flex:1;min-width:0"><div class="pt-name">'+f.name+'</div><div class="pt-meta">photo</div></div><span class="pt-del">✕</span>';}
-    d.querySelector('.pt-del').addEventListener('click',function(e){e.stopPropagation();files=files.filter(function(x){return x.id!==f.id;});selIds.delete(f.id);renderShelf();updBtn();});
-    d.addEventListener('click',function(e){if(e.target.classList.contains('pt-del'))return;selIds.has(f.id)?selIds.delete(f.id):selIds.add(f.id);d.classList.toggle('sel');updBtn();});
+    d.querySelector('.pt-del').addEventListener('click',function(e){e.stopPropagation();files=files.filter(function(x){return x.id!==f.id;});selIds.delete(f.id);renderShelf();psUpdBtn();});
+    d.addEventListener('click',function(e){if(e.target.classList.contains('pt-del'))return;selIds.has(f.id)?selIds.delete(f.id):selIds.add(f.id);d.classList.toggle('sel');psUpdBtn();});
     s.appendChild(d);
   });
 }
-function updBtn(){document.getElementById('gb').disabled=!(selIds.size>0&&getChkLocs().length>0);}
+function psUpdBtn(){document.getElementById('gb').disabled=!(selIds.size>0&&getChkLocs().length>0);}
 function setVar(n,btn){varCount=n;document.querySelectorAll('.vb').forEach(function(b){b.classList.remove('act');});btn.classList.add('act');}
 
 // ── EXIF ───────────────────────────────────────────────────────────────────
