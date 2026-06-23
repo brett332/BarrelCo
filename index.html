@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BarrelCo Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#0f0e0a;--surf:#18170f;--bdr:#2a2820;--txt:#e8e4d8;--muted:#66634f;--acc:#e8c547;--dim:#3a3720;}
+body{background:var(--bg);color:var(--txt);font-family:'IBM Plex Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;}
+.logo{font-family:'IBM Plex Mono',monospace;font-size:1.6rem;font-weight:600;color:var(--acc);letter-spacing:-.02em;margin-bottom:6px;}
+.sub{font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:48px;}
+.tools{display:flex;flex-direction:column;gap:12px;width:100%;max-width:360px;}
+.tool-btn{display:flex;align-items:center;gap:16px;padding:18px 20px;background:var(--surf);border:1px solid var(--bdr);border-radius:10px;text-decoration:none;color:var(--txt);transition:all .15s;cursor:pointer;}
+.tool-btn:hover{border-color:var(--acc);background:rgba(232,197,71,.04);transform:translateX(3px);}
+.tool-ico{font-size:1.4rem;width:36px;text-align:center;flex-shrink:0;}
+.tool-name{font-family:'IBM Plex Mono',monospace;font-size:.85rem;font-weight:600;color:var(--acc);}
+.tool-desc{font-size:.7rem;color:var(--muted);margin-top:2px;}
+.divider{width:100%;max-width:360px;border:none;border-top:1px solid var(--dim);margin:32px 0 24px;}
+.footer{font-family:'IBM Plex Mono',monospace;font-size:.55rem;color:var(--muted);letter-spacing:.08em;}
+</style>
+</head>
+<body>
+
+<div class="logo">BarrelCo</div>
+<div class="sub">Seller Tools</div>
+
+<div class="tools">
+  <a href="./listingforge/" class="tool-btn">
+    <div class="tool-ico">📋</div>
+    <div>
+      <div class="tool-name">ListingForge</div>
+      <div class="tool-desc">AI-powered Facebook Marketplace listing generator</div>
+    </div>
+  </a>
+  <a href="./photoshift/" class="tool-btn">
+    <div class="tool-ico">📷</div>
+    <div>
+      <div class="tool-name">PhotoShift</div>
+      <div class="tool-desc">Photo variation tool — defeat duplicate detection</div>
+    </div>
+  </a>
+  <a href="./stockshift/" class="tool-btn">
+    <div class="tool-ico">📦</div>
+    <div>
+      <div class="tool-name">StockShift</div>
+      <div class="tool-desc">Inventory tracker with transaction history</div>
+    </div>
+  </a>
+</div>
+
+<hr class="divider">
+<div class="footer">brett332 / BarrelCo</div>
+
+</body>
+</html>
