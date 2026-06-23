@@ -1,0 +1,1971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>StockShift — Inventory</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Azeret+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --bg: #0a0a0a;
+  --s1: #111111;
+  --s2: #1a1a1a;
+  --s3: #242424;
+  --border: #2a2a2a;
+  --border2: #383838;
+  --text: #f5f5f5;
+  --text2: #888;
+  --text3: #555;
+  --green: #22c55e;
+  --green-dim: rgba(34,197,94,0.12);
+  --red: #ef4444;
+  --red-dim: rgba(239,68,68,0.12);
+  --amber: #f59e0b;
+  --amber-dim: rgba(245,158,11,0.12);
+  --blue: #3b82f6;
+  --blue-dim: rgba(59,130,246,0.12);
+  --accent: #f5f5f5;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+  min-height: 100vh;
+  max-width: 480px;
+  margin: 0 auto;
+  padding-bottom: 80px;
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.topbar-logo {
+  font-family: 'Azeret Mono', monospace;
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.topbar-logo span { color: var(--green); }
+
+.topbar-right {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+.tb-btn {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-family: 'Azeret Mono', monospace;
+  font-size: 0.65rem;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.03em;
+}
+.tb-btn:hover, .tb-btn:active { background: var(--s3); color: var(--text); border-color: var(--border2); }
+.tb-btn.green { border-color: rgba(34,197,94,0.3); color: var(--green); }
+
+/* ── VIEWS ── */
+.view { display: none; padding: 0; }
+.view.active { display: block; }
+
+/* ── QUICK ENTRY ── */
+.quick-hero {
+  padding: 24px 18px 16px;
+}
+
+.quick-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin-bottom: 4px;
+}
+
+.quick-sub {
+  font-size: 0.75rem;
+  color: var(--text3);
+  font-family: 'Azeret Mono', monospace;
+}
+
+/* Mode toggle */
+.mode-toggle {
+  display: flex;
+  margin: 16px 18px;
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 7px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: transparent;
+  color: var(--text3);
+}
+
+.mode-btn.sold.active {
+  background: var(--red);
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(239,68,68,0.3);
+}
+
+.mode-btn.add.active {
+  background: var(--green);
+  color: #000;
+  box-shadow: 0 2px 12px rgba(34,197,94,0.3);
+}
+
+.mode-btn.edit.active {
+  background: var(--amber);
+  color: #000;
+  box-shadow: 0 2px 12px rgba(245,158,11,0.3);
+}
+
+/* Select fields */
+.field-group {
+  padding: 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.field-label {
+  font-family: 'Azeret Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 5px;
+}
+
+.styled-select, .styled-input {
+  width: 100%;
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  outline: none;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+}
+.styled-select:focus, .styled-input:focus { border-color: var(--border2); }
+
+/* Qty buttons */
+.qty-row {
+  padding: 0 18px;
+  margin-bottom: 14px;
+}
+
+.qty-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.qty-btn {
+  aspect-ratio: 1;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: var(--s2);
+  color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qty-btn:active { transform: scale(0.92); }
+.qty-btn.selected-sold { background: var(--red-dim); border-color: var(--red); color: var(--red); }
+.qty-btn.selected-add { background: var(--green-dim); border-color: var(--green); color: var(--green); }
+.qty-btn.selected-edit { background: var(--amber-dim); border-color: var(--amber); color: var(--amber); }
+.qty-btn.custom-btn { font-size: 0.75rem; font-weight: 600; color: var(--text3); letter-spacing: 0.05em; }
+
+.custom-qty-row {
+  display: none;
+  gap: 8px;
+  margin-top: 8px;
+}
+.custom-qty-row.visible { display: flex; }
+
+.custom-qty-input {
+  flex: 1;
+  background: var(--s2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  outline: none;
+  text-align: center;
+}
+
+/* Notes */
+.notes-row {
+  padding: 0 18px;
+  margin-bottom: 16px;
+}
+
+.notes-input {
+  width: 100%;
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem;
+  outline: none;
+  resize: none;
+  min-height: 60px;
+  transition: border-color 0.15s;
+}
+.notes-input:focus { border-color: var(--border2); }
+.notes-input::placeholder { color: var(--text3); }
+
+/* Confirm button */
+.confirm-btn {
+  margin: 0 18px;
+  width: calc(100% - 36px);
+  padding: 18px;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: -0.01em;
+}
+
+.confirm-btn.sold { background: var(--red); color: #fff; }
+.confirm-btn.add  { background: var(--green); color: #000; }
+.confirm-btn.edit { background: var(--amber); color: #000; }
+.confirm-btn:active { transform: scale(0.97); }
+.confirm-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--s3);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  opacity: 0;
+  transition: all 0.3s;
+  z-index: 1000;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.toast.green { border-color: rgba(34,197,94,0.4); color: var(--green); }
+.toast.red   { border-color: rgba(239,68,68,0.4); color: var(--red); }
+.toast.amber { border-color: rgba(245,158,11,0.4); color: var(--amber); }
+
+/* ── INVENTORY VIEW ── */
+.inv-header {
+  padding: 20px 18px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.inv-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.filter-row {
+  padding: 0 18px 12px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.filter-row::-webkit-scrollbar { display: none; }
+
+.filter-chip {
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text3);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+  background: var(--s2);
+}
+.filter-chip.active { border-color: var(--text2); color: var(--text); background: var(--s3); }
+
+.inv-list {
+  padding: 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inv-card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: border-color 0.15s;
+}
+.inv-card:active { background: var(--s2); }
+
+.inv-qty-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Azeret Mono', monospace;
+  font-size: 1.1rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.inv-qty-badge.high  { background: var(--green-dim); color: var(--green); }
+.inv-qty-badge.mid   { background: var(--amber-dim); color: var(--amber); }
+.inv-qty-badge.low   { background: var(--red-dim); color: var(--red); }
+.inv-qty-badge.zero  { background: var(--s3); color: var(--text3); }
+
+.inv-info { flex: 1; overflow: hidden; }
+.inv-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.inv-meta {
+  font-family: 'Azeret Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text3);
+  margin-top: 2px;
+  letter-spacing: 0.05em;
+}
+.inv-code {
+  font-family: 'Azeret Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--text3);
+  background: var(--s3);
+  padding: 2px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+/* ── HISTORY VIEW ── */
+.history-list {
+  padding: 12px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.history-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.history-dot.sold { background: var(--red); }
+.history-dot.add  { background: var(--green); }
+.history-dot.edit { background: var(--amber); }
+
+.history-info { flex: 1; }
+.history-main { font-size: 0.8rem; font-weight: 600; }
+.history-sub {
+  font-family: 'Azeret Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text3);
+  margin-top: 1px;
+}
+
+.history-qty {
+  font-family: 'Azeret Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.history-qty.sold { color: var(--red); }
+.history-qty.add  { color: var(--green); }
+.history-qty.edit { color: var(--amber); }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  display: flex;
+  padding: 8px 12px 16px;
+  gap: 4px;
+  z-index: 100;
+}
+
+.nav-btn {
+  flex: 1;
+  padding: 10px 4px;
+  border: none;
+  background: transparent;
+  color: var(--text3);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.15s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.nav-btn .nav-icon { font-size: 1.2rem; }
+.nav-btn.active { color: var(--text); background: var(--s2); }
+
+/* ── SETUP / PRODUCTS ── */
+.setup-section {
+  padding: 16px 18px;
+}
+
+.setup-card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.setup-card-head {
+  padding: 12px 16px;
+  background: var(--s2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.setup-card-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.small-btn {
+  padding: 5px 12px;
+  background: var(--s3);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  color: var(--text2);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.small-btn:hover { color: var(--text); }
+.small-btn.green { border-color: rgba(34,197,94,0.3); color: var(--green); }
+
+.setup-item {
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.setup-item:last-child { border-bottom: none; }
+
+.setup-item-name { font-size: 0.82rem; font-weight: 500; }
+.setup-item-meta {
+  font-family: 'Azeret Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text3);
+}
+
+/* New item form */
+.new-item-form {
+  padding: 12px 16px;
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid var(--border);
+  background: var(--s2);
+}
+.new-item-form.open { display: flex; }
+
+.form-row { display: flex; gap: 8px; }
+
+.mini-input {
+  flex: 1;
+  background: var(--s3);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 9px 12px;
+  color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.8rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.mini-input:focus { border-color: var(--border2); }
+.mini-input::placeholder { color: var(--text3); }
+
+/* Export section */
+.export-section {
+  padding: 16px 18px;
+}
+
+.export-card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 10px;
+}
+
+.export-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.export-desc {
+  font-size: 0.72rem;
+  color: var(--text3);
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+
+.export-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: var(--s3);
+  color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.export-btn:hover { border-color: var(--text3); }
+.export-btn .export-icon { font-size: 1.1rem; }
+
+.webhook-input {
+  width: 100%;
+  background: var(--s3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-family: 'Azeret Mono', monospace;
+  font-size: 0.72rem;
+  outline: none;
+  margin-top: 8px;
+  transition: border-color 0.15s;
+}
+.webhook-input:focus { border-color: var(--border2); }
+.webhook-input::placeholder { color: var(--text3); }
+
+/* Alert banner */
+.alert-bar {
+  margin: 0 18px 12px;
+  padding: 10px 14px;
+  background: var(--red-dim);
+  border: 1px solid rgba(239,68,68,0.25);
+  border-radius: 8px;
+  font-size: 0.72rem;
+  color: var(--red);
+  display: none;
+}
+.alert-bar.show { display: block; }
+
+/* ── ROTATION CALENDAR ── */
+.rot-card {
+  margin: 0 18px 14px;
+  padding: 14px;
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.rot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.rot-title {
+  font-family: 'Azeret Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+.rot-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.rot-cell {
+  padding: 10px 6px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  text-align: center;
+  background: var(--s2);
+  transition: all 0.2s;
+}
+.rot-cell.current {
+  border-width: 2px;
+}
+.rot-cell-dir {
+  font-family: 'Azeret Mono', monospace;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1;
+}
+.rot-cell-week {
+  font-family: 'Azeret Mono', monospace;
+  font-size: 0.55rem;
+  color: var(--text3);
+  margin-top: 3px;
+  letter-spacing: 0.05em;
+}
+.rot-msg {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 6px 0 2px;
+}
+.rot-sub {
+  font-size: 0.65rem;
+  color: var(--text3);
+  text-align: center;
+  font-family: 'Azeret Mono', monospace;
+}
+.rot-setup {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  align-items: center;
+}
+.rot-date-input {
+  flex: 1;
+  background: var(--s3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: var(--text);
+  font-family: 'Azeret Mono', monospace;
+  font-size: 0.72rem;
+  outline: none;
+}
+
+/* ── PRICE MODAL ── */
+.price-modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.8);
+  z-index: 200;
+  display: flex; align-items: flex-end;
+  justify-content: center;
+}
+.price-modal {
+  background: var(--s1);
+  border: 1px solid var(--border2);
+  border-radius: 16px 16px 0 0;
+  padding: 24px 20px 32px;
+  width: 100%;
+  max-width: 480px;
+}
+.price-modal h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.price-modal-sub {
+  font-family: 'Azeret Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--text3);
+  margin-bottom: 18px;
+}
+.price-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.price-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.price-field label {
+  font-family: 'Azeret Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text3);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.price-input {
+  background: var(--s3);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  outline: none;
+  width: 100%;
+}
+.price-effective {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--green);
+  margin-bottom: 14px;
+  font-family: 'Azeret Mono', monospace;
+}
+.price-save-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--green);
+  color: #000;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.price-cancel-btn {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  color: var(--text3);
+  border: none;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.78rem;
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+.inv-price {
+  font-family: 'Azeret Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--text3);
+  text-align: right;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.inv-price:hover { border-color: var(--border2); color: var(--text2); }
+.inv-price .discounted { color: var(--green); }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* Empty state */
+.empty { padding: 40px 18px; text-align: center; color: var(--text3); font-size: 0.8rem; line-height: 1.6; }
+.empty-icon { font-size: 2.5rem; margin-bottom: 10px; opacity: 0.3; }
+
+/* Threshold indicator */
+.threshold-row {
+  padding: 0 18px 8px;
+  font-family: 'Azeret Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--text3);
+  display: flex;
+  gap: 16px;
+}
+.threshold-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+.app-nav-btn{display:inline-flex;align-items:center;background:transparent;border:1px solid var(--bdr,#2a2a30);border-radius:4px;color:var(--muted,#666);font-size:.58rem;padding:3px 9px;cursor:pointer;text-decoration:none;transition:all .15s;font-family:inherit;letter-spacing:.03em;}
+.app-nav-btn:hover{border-color:var(--acc,#e8c547);color:var(--acc,#e8c547);}
+.app-nav-group{display:flex;gap:6px;align-items:center;}
+.hdr-tab-ss{background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--text2);font-size:.58rem;padding:3px 9px;cursor:pointer;transition:all .15s;font-family:inherit;}
+.hdr-tab-ss:hover{border-color:var(--green);color:var(--green);}
+.hdr-tab-ss.active{border-color:var(--green);color:var(--green);}
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-logo">Stock<span>Shift</span></div>
+  <div class="topbar-right">
+    <div class="app-nav-group"><a href="https://ridge-co.github.io/barrel-tools/listingforge/" target="_blank" class="app-nav-btn">ListingForge</a><a href="https://ridge-co.github.io/barrel-tools/photoshift/" target="_blank" class="app-nav-btn">PhotoShift</a><span class="app-nav-btn" style="border-color:var(--green,#22c55e);color:var(--green,#22c55e);">StockShift</span></div>
+    <button class="hdr-tab-ss" id="ssTabWishlist" onclick="showSsOverlay('wishlist')">Wishlist</button>
+    <button class="hdr-tab-ss" id="ssTabDebug" onclick="showSsOverlay('debug')">Debug</button>
+    <button class="tb-btn" onclick="showView('export')">Export</button>
+    <button class="tb-btn green" onclick="importData()">Import</button>
+    <input type="file" id="importInput" accept=".json" style="display:none" onchange="handleImport(this)">
+  </div>
+</div>
+
+<!-- QUICK ENTRY VIEW -->
+<div class="view active" id="view-quick">
+  <div class="quick-hero">
+    <div class="quick-title">Quick Entry</div>
+    <div class="quick-sub">TAP TO LOG A TRANSACTION</div>
+  </div>
+
+  <div class="mode-toggle">
+    <button class="mode-btn sold active" onclick="setMode('sold')">— Sold</button>
+    <button class="mode-btn add" onclick="setMode('add')">+ Add Stock</button>
+    <button class="mode-btn edit" onclick="setMode('edit')">✎ Set Count</button>
+  </div>
+
+  <div class="field-group">
+    <div>
+      <div class="field-label">Location</div>
+      <select class="styled-select" id="qLocation" onchange="updateAlerts()">
+        <option value="">Select location…</option>
+      </select>
+    </div>
+    <div>
+      <div class="field-label">Product</div>
+      <select class="styled-select" id="qProduct" onchange="updateAlerts()">
+        <option value="">Select product…</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="alertBar" class="alert-bar"></div>
+
+  <div class="qty-row">
+    <div class="field-label">Quantity</div>
+    <div class="qty-grid" id="qtyGrid">
+      <button class="qty-btn" onclick="selectQty(1)">1</button>
+      <button class="qty-btn" onclick="selectQty(2)">2</button>
+      <button class="qty-btn" onclick="selectQty(3)">3</button>
+      <button class="qty-btn" onclick="selectQty(4)">4</button>
+      <button class="qty-btn" onclick="selectQty(5)">5</button>
+      <button class="qty-btn" onclick="selectQty(10)">10</button>
+      <button class="qty-btn" onclick="selectQty(20)">20</button>
+      <button class="qty-btn" onclick="selectQty(25)">25</button>
+      <button class="qty-btn" onclick="selectQty(50)">50</button>
+      <button class="qty-btn custom-btn" onclick="toggleCustom()">OTHER</button>
+    </div>
+    <div class="custom-qty-row" id="customRow">
+      <input class="custom-qty-input" type="number" id="customQtyInput" placeholder="0" min="1" oninput="selectCustomQty()">
+    </div>
+  </div>
+
+  <div class="notes-row">
+    <div class="field-label">Note (optional)</div>
+    <textarea class="notes-input" id="qNote" placeholder="e.g. paid cash, returning customer, condition note…"></textarea>
+  </div>
+
+  <button class="confirm-btn sold" id="confirmBtn" onclick="confirmEntry()">Log Sale</button>
+</div>
+
+<!-- PRICE EDIT MODAL -->
+<div class="price-modal-backdrop" id="priceModal" style="display:none" onclick="if(event.target===this)closePriceModal()">
+  <div class="price-modal">
+    <h3 id="pmTitle">Edit Price</h3>
+    <div class="price-modal-sub" id="pmSub"></div>
+    <div class="price-row">
+      <div class="price-field">
+        <label>Price ($)</label>
+        <input class="price-input" type="number" id="pmPrice" min="0" step="0.01" oninput="updateEffective()">
+      </div>
+      <div class="price-field">
+        <label>Discount (%)</label>
+        <input class="price-input" type="number" id="pmDiscount" min="0" max="100" value="0" oninput="updateEffective()">
+      </div>
+    </div>
+    <div class="price-effective" id="pmEffective"></div>
+    <button class="price-save-btn" onclick="savePriceModal()">Save Price</button>
+    <button class="price-cancel-btn" onclick="closePriceModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- INVENTORY VIEW -->
+<div class="view" id="view-inventory">
+  <div class="inv-header">
+    <div class="inv-title">Inventory</div>
+  </div>
+
+  <!-- Rotation Calendar -->
+  <div class="rot-card" id="rotationCard"></div>
+
+  <div class="filter-row" id="locFilterRow">
+    <div class="filter-chip active" data-loc="all" onclick="filterLoc(this)">All</div>
+  </div>
+
+  <div class="threshold-row">
+    <span><span class="threshold-dot" style="background:var(--green)"></span>Good</span>
+    <span><span class="threshold-dot" style="background:var(--amber)"></span>Low (≤5)</span>
+    <span><span class="threshold-dot" style="background:var(--red)"></span>Critical (≤2)</span>
+    <span><span class="threshold-dot" style="background:var(--s3);border:1px solid var(--border2)"></span>Out</span>
+  </div>
+
+  <div class="inv-list" id="invList"></div>
+</div>
+
+<!-- HISTORY VIEW -->
+<div class="view" id="view-history">
+  <div class="inv-header">
+    <div class="inv-title">Transaction Log</div>
+    <button class="small-btn" onclick="clearHistory()" style="color:var(--text3)">Clear</button>
+  </div>
+  <div class="history-list" id="historyList"></div>
+</div>
+
+<!-- SETUP VIEW -->
+<div class="view" id="view-setup">
+  <div class="setup-section">
+
+    <!-- Products -->
+    <div class="setup-card">
+      <div class="setup-card-head">
+        <div class="setup-card-title">Products</div>
+        <button class="small-btn green" onclick="toggleNewProduct()">+ Add</button>
+      </div>
+      <div id="productSetupList"></div>
+      <div class="new-item-form" id="newProductForm">
+        <div class="form-row">
+          <input class="mini-input" id="npName" placeholder="Product name…">
+          <input class="mini-input" id="npCode" placeholder="Code e.g. WB-01" style="max-width:110px">
+        </div>
+        <div class="form-row">
+          <input class="mini-input" id="npPrice" placeholder="Price $" type="number" style="max-width:100px">
+          <input class="mini-input" id="npThreshold" placeholder="Low stock alert at" type="number" style="max-width:140px">
+        </div>
+        <div class="form-row">
+          <button class="small-btn green" onclick="saveNewProduct()" style="flex:1;padding:10px;">Save Product</button>
+          <button class="small-btn" onclick="toggleNewProduct()" style="padding:10px 14px;">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Locations -->
+    <div class="setup-card">
+      <div class="setup-card-head">
+        <div class="setup-card-title">Locations</div>
+        <button class="small-btn green" onclick="toggleNewLocation()">+ Add</button>
+      </div>
+      <div id="locationSetupList"></div>
+      <div class="new-item-form" id="newLocationForm">
+        <div class="form-row">
+          <input class="mini-input" id="nlName" placeholder="Location name…">
+        </div>
+        <div class="form-row">
+          <button class="small-btn green" onclick="saveNewLocation()" style="flex:1;padding:10px;">Save Location</button>
+          <button class="small-btn" onclick="toggleNewLocation()" style="padding:10px 14px;">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Thresholds info -->
+    <div style="padding:10px 4px;font-size:0.7rem;color:var(--text3);line-height:1.6;">
+      Set the "Low stock alert at" value per product to trigger the red warning on Quick Entry. Webhooks for automated SMS alerts (ClickUp, Zapier, etc.) can be configured in the Export tab.
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT VIEW -->
+<div class="view" id="view-export">
+  <div class="export-section">
+
+    <div class="export-card">
+      <div class="export-title">Backup / Sync</div>
+      <div class="export-desc">Export your full inventory, product list, and transaction history as JSON. Import on any device to sync.</div>
+      <button class="export-btn" onclick="exportFull()">
+        <span class="export-icon">⬇</span> Export Full Backup (.json)
+      </button>
+    </div>
+
+    <div class="export-card">
+      <div class="export-title">Spreadsheet Export</div>
+      <div class="export-desc">Download current inventory as CSV — import directly into Google Sheets, Excel, or ClickUp.</div>
+      <button class="export-btn" onclick="exportCSV()">
+        <span class="export-icon">📊</span> Export Inventory (.csv)
+      </button>
+      <button class="export-btn" style="margin-top:8px" onclick="exportHistoryCSV()">
+        <span class="export-icon">📋</span> Export Transaction Log (.csv)
+      </button>
+    </div>
+
+    <div class="export-card">
+      <div class="export-title">Webhook (ClickUp / Zapier / Make)</div>
+      <div class="export-desc">Paste a webhook URL to push inventory updates automatically on every sale or stock change. Compatible with ClickUp automations, Zapier, Make (Integromat), and any REST webhook.</div>
+      <input class="webhook-input" id="webhookUrl" placeholder="https://hooks.zapier.com/…" oninput="saveWebhook()">
+      <button class="export-btn" style="margin-top:10px" onclick="testWebhook()">
+        <span class="export-icon">🔗</span> Test Webhook
+      </button>
+    </div>
+
+    <div class="export-card">
+      <div class="export-title">ClickUp SMS Alert Setup</div>
+      <div class="export-desc" style="margin-bottom:0">
+        To get SMS alerts when inventory drops below threshold:<br><br>
+        1. Create a ClickUp automation: "When webhook received → If qty &lt; threshold → Send SMS"<br>
+        2. Or use Zapier: Webhook → Filter (qty &lt; X, date between Mar 1–Aug 15) → SMS by Twilio<br>
+        3. Paste the webhook URL above — StockShift sends product, location, quantity, and timestamp on every transaction.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="nav-btn active" data-view="quick" onclick="showView('quick')">
+    <span class="nav-icon">⚡</span>Quick
+  </button>
+  <button class="nav-btn" data-view="inventory" onclick="showView('inventory')">
+    <span class="nav-icon">📦</span>Stock
+  </button>
+  <button class="nav-btn" data-view="history" onclick="showView('history')">
+    <span class="nav-icon">📋</span>Log
+  </button>
+  <button class="nav-btn" data-view="setup" onclick="showView('setup')">
+    <span class="nav-icon">⚙️</span>Setup
+  </button>
+  <button class="nav-btn" data-view="export" onclick="showView('export')">
+    <span class="nav-icon">↗</span>Export
+  </button>
+</div>
+
+<script>
+// ── STORAGE ────────────────────────────────────────────────────────────────
+const K = {
+  products:  'ss_products_v1',
+  locations: 'ss_locations_v1',
+  inventory: 'ss_inventory_v1',
+  history:   'ss_history_v1',
+  webhook:   'ss_webhook_v1',
+  prices:    'ss_prices_v1',    // { "pid|lid": { price, discount } }
+  rotation:  'ss_rotation_v1',  // { startDate: "YYYY-MM-DD" }
+};
+
+let products     = [];
+let locations    = [];
+let inventory    = {};
+let history      = [];
+let prices       = {};
+let rotationStart = null;
+let webhookUrl   = '';
+
+// ── QUICK ENTRY STATE ──────────────────────────────────────────────────────
+let currentMode = 'sold';
+let selectedQty  = null;
+let customActive = false;
+
+// ── ROTATION HELPERS ───────────────────────────────────────────────────────
+const DIRS = [
+  { key: 'N', label: 'North', sub: 'NL1', week: 1, color: 'var(--blue)' },
+  { key: 'S', label: 'South', sub: 'SL2', week: 2, color: 'var(--green)' },
+  { key: 'E', label: 'East',  sub: 'EL3', week: 3, color: 'var(--amber)' },
+  { key: 'W', label: 'West',  sub: 'WL4', week: 4, color: 'var(--red)' },
+];
+
+function getCurrentWeek() {
+  if (!rotationStart) return null;
+  const start = new Date(rotationStart);
+  const now   = new Date();
+  const diffDays = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+  const weekNum  = Math.floor(diffDays / 7);
+  return (weekNum % 4); // 0=N, 1=S, 2=E, 3=W
+}
+
+function setRotationStart(dateStr) {
+  rotationStart = dateStr || new Date().toISOString().slice(0,10);
+  localStorage.setItem(K.rotation, JSON.stringify({ startDate: rotationStart }));
+  renderRotationCalendar();
+}
+
+// ── PRICING HELPERS ────────────────────────────────────────────────────────
+function priceKey(pid, lid) { return `${pid}|${lid}`; }
+
+function getPrice(pid, lid) {
+  const override = prices[priceKey(pid, lid)];
+  if (override?.price !== undefined && override.price !== null) return override.price;
+  return products.find(p=>p.id===pid)?.price || 0;
+}
+
+function getDiscount(pid, lid) {
+  return prices[priceKey(pid, lid)]?.discount || 0;
+}
+
+function getEffectivePrice(pid, lid) {
+  const base = getPrice(pid, lid);
+  const disc = getDiscount(pid, lid);
+  return disc > 0 ? +(base * (1 - disc/100)).toFixed(2) : base;
+}
+
+function setPrice(pid, lid, price, discount) {
+  prices[priceKey(pid, lid)] = { price: parseFloat(price)||0, discount: parseFloat(discount)||0 };
+  localStorage.setItem(K.prices, JSON.stringify(prices));
+}
+
+function saveDefaultPrices() {
+  // Set default prices for all product+location combos that have no override
+  const defaults = { p_ob2: 80, p_ob1: 100, p_op: 50, p_rb: 0, p_fsb: 0, p_fsbb: 0, p_pp1: 0, p_pp2: 0 };
+  products.forEach(p => {
+    locations.forEach(l => {
+      const k = priceKey(p.id, l.id);
+      if (!prices[k]) {
+        const defPrice = defaults[p.id] ?? p.price ?? 0;
+        if (defPrice > 0) prices[k] = { price: defPrice, discount: 0 };
+      }
+    });
+  });
+  localStorage.setItem(K.prices, JSON.stringify(prices));
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+function init() {
+  try { products  = JSON.parse(localStorage.getItem(K.products))  || []; } catch(e){ products=[]; }
+  try { locations = JSON.parse(localStorage.getItem(K.locations)) || []; } catch(e){ locations=[]; }
+  try { inventory = JSON.parse(localStorage.getItem(K.inventory)) || {}; } catch(e){ inventory={}; }
+  try { history   = JSON.parse(localStorage.getItem(K.history))   || []; } catch(e){ history=[]; }
+  try { prices    = JSON.parse(localStorage.getItem(K.prices))    || {}; } catch(e){ prices={}; }
+  try {
+    const rot = JSON.parse(localStorage.getItem(K.rotation));
+    rotationStart = rot?.startDate || null;
+  } catch(e){}
+  webhookUrl = localStorage.getItem(K.webhook) || '';
+
+  if (products.length === 0)  seedDefaultProducts();
+  if (locations.length === 0) seedDefaultLocations();
+  saveDefaultPrices();
+
+  if (document.getElementById('webhookUrl')) {
+    document.getElementById('webhookUrl').value = webhookUrl;
+  }
+
+  populateSelects();
+  renderLocFilters();
+  renderRotationCalendar();
+  renderInventory();
+  renderHistory();
+  renderSetup();
+}
+
+function seedDefaultProducts() {
+  products = [
+    { id: 'p_ob2',  name: 'Weathered Oak Whiskey Barrels',    code: 'OB2',  price: 80,  threshold: 3 },
+    { id: 'p_ob1',  name: 'Higher Grade Oak Whiskey Barrels', code: 'OB1',  price: 100, threshold: 2 },
+    { id: 'p_op',   name: 'Whiskey Barrel Planters',          code: 'OP',   price: 50,  threshold: 3 },
+    { id: 'p_rb',   name: 'Rain Barrels',                     code: 'RB',   price: 0,   threshold: 3 },
+    { id: 'p_fsb',  name: 'Food Grade Steel Barrels',         code: 'FSB1', price: 0,   threshold: 3 },
+    { id: 'p_fsbb', name: 'Burn Barrels',                     code: 'FSBB', price: 0,   threshold: 3 },
+    { id: 'p_pp1',  name: 'HD Plastic Planters',              code: 'PP1',  price: 0,   threshold: 3 },
+    { id: 'p_pp2',  name: 'HD Plastic Planters Large',        code: 'PP2',  price: 0,   threshold: 3 },
+  ];
+  save('products');
+}
+
+function seedDefaultLocations() {
+  locations = [
+    { id: 'bal_nl1', name: 'Baltimore N', cityCode: 'BAL', subCode: 'NL1', rotWeek: 1 },
+    { id: 'bal_sl2', name: 'Baltimore S', cityCode: 'BAL', subCode: 'SL2', rotWeek: 2 },
+    { id: 'bal_el3', name: 'Baltimore E', cityCode: 'BAL', subCode: 'EL3', rotWeek: 3 },
+    { id: 'bal_wl4', name: 'Baltimore W', cityCode: 'BAL', subCode: 'WL4', rotWeek: 4 },
+    { id: 'win_nl1', name: 'Winchester N', cityCode: 'WIN', subCode: 'NL1', rotWeek: 1 },
+    { id: 'win_sl2', name: 'Winchester S', cityCode: 'WIN', subCode: 'SL2', rotWeek: 2 },
+    { id: 'win_el3', name: 'Winchester E', cityCode: 'WIN', subCode: 'EL3', rotWeek: 3 },
+    { id: 'win_wl4', name: 'Winchester W', cityCode: 'WIN', subCode: 'WL4', rotWeek: 4 },
+    { id: 'way_nl1', name: 'Waynesboro N', cityCode: 'WAY', subCode: 'NL1', rotWeek: 1 },
+    { id: 'way_sl2', name: 'Waynesboro S', cityCode: 'WAY', subCode: 'SL2', rotWeek: 2 },
+    { id: 'way_el3', name: 'Waynesboro E', cityCode: 'WAY', subCode: 'EL3', rotWeek: 3 },
+    { id: 'way_wl4', name: 'Waynesboro W', cityCode: 'WAY', subCode: 'WL4', rotWeek: 4 },
+  ];
+  save('locations');
+}
+
+function save(key) {
+  if (key === 'products')  localStorage.setItem(K.products,  JSON.stringify(products));
+  if (key === 'locations') localStorage.setItem(K.locations, JSON.stringify(locations));
+  if (key === 'inventory') localStorage.setItem(K.inventory, JSON.stringify(inventory));
+  if (key === 'history')   localStorage.setItem(K.history,   JSON.stringify(history));
+  if (key === 'prices')    localStorage.setItem(K.prices,    JSON.stringify(prices));
+}
+
+function invKey(pid, lid) { return `${pid}|${lid}`; }
+function getCount(pid, lid) { return inventory[invKey(pid, lid)] || 0; }
+function setCount(pid, lid, n) {
+  inventory[invKey(pid, lid)] = Math.max(0, n);
+  save('inventory');
+}
+
+// Full listing code: BAL-OB2-NL1 format
+function getListingCode(product, location) {
+  if (!product || !location) return '';
+  const city = location.cityCode || location.id.toUpperCase();
+  const sub  = location.subCode  || '';
+  return sub
+    ? `${city}-${product.code}-${sub}`
+    : `${city}-${product.code}`;
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  document.querySelector(`.nav-btn[data-view="${name}"]`)?.classList.add('active');
+  if (name === 'inventory') renderInventory();
+  if (name === 'history')   renderHistory();
+  if (name === 'setup')     renderSetup();
+}
+
+// ── MODE ──────────────────────────────────────────────────────────────────
+function setMode(mode) {
+  currentMode = mode;
+  selectedQty = null;
+  customActive = false;
+  document.getElementById('customRow').classList.remove('visible');
+  document.getElementById('customQtyInput').value = '';
+
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.mode-btn.${mode}`).classList.add('active');
+
+  document.querySelectorAll('.qty-btn').forEach(b => {
+    b.classList.remove('selected-sold','selected-add','selected-edit');
+  });
+
+  const btn = document.getElementById('confirmBtn');
+  const labels = { sold: 'Log Sale', add: 'Add to Stock', edit: 'Set Count' };
+  btn.textContent = labels[mode];
+  btn.className = `confirm-btn ${mode}`;
+
+  updateAlerts();
+}
+
+// ── QTY ───────────────────────────────────────────────────────────────────
+function selectQty(n) {
+  selectedQty = n;
+  customActive = false;
+  document.getElementById('customRow').classList.remove('visible');
+  document.getElementById('customQtyInput').value = '';
+  document.querySelectorAll('.qty-btn:not(.custom-btn)').forEach(b => {
+    b.classList.remove('selected-sold','selected-add','selected-edit');
+    if (parseInt(b.textContent) === n) b.classList.add(`selected-${currentMode}`);
+  });
+}
+
+function toggleCustom() {
+  customActive = !customActive;
+  document.getElementById('customRow').classList.toggle('visible', customActive);
+  if (customActive) {
+    document.getElementById('customQtyInput').focus();
+    document.querySelectorAll('.qty-btn:not(.custom-btn)').forEach(b =>
+      b.classList.remove('selected-sold','selected-add','selected-edit'));
+    selectedQty = null;
+  }
+}
+
+function selectCustomQty() {
+  const val = parseInt(document.getElementById('customQtyInput').value);
+  selectedQty = isNaN(val) ? null : val;
+}
+
+// ── ALERTS ────────────────────────────────────────────────────────────────
+function updateAlerts() {
+  const pid = document.getElementById('qProduct').value;
+  const lid = document.getElementById('qLocation').value;
+  const bar = document.getElementById('alertBar');
+  if (!pid || !lid) { bar.classList.remove('show'); return; }
+  const product = products.find(p=>p.id===pid);
+  const count = getCount(pid, lid);
+  const loc = locations.find(l=>l.id===lid);
+  if (product && count <= (product.threshold || 2) && count > 0) {
+    bar.textContent = `⚠ Low stock: ${count} ${product.name} in ${loc?.name || ''}`;
+    bar.classList.add('show');
+  } else if (count === 0) {
+    bar.textContent = `🚫 Out of stock: ${product?.name} in ${loc?.name || ''}`;
+    bar.classList.add('show');
+  } else {
+    bar.classList.remove('show');
+  }
+}
+
+// ── CONFIRM ENTRY ─────────────────────────────────────────────────────────
+function confirmEntry() {
+  const pid  = document.getElementById('qProduct').value;
+  const lid  = document.getElementById('qLocation').value;
+  const note = document.getElementById('qNote').value.trim();
+
+  if (!pid || !lid) { showToast('Select product and location', 'amber'); return; }
+  if (!selectedQty || selectedQty < 1) { showToast('Select a quantity', 'amber'); return; }
+
+  const product  = products.find(p=>p.id===pid);
+  const location = locations.find(l=>l.id===lid);
+  const locName  = location?.name || lid;
+  const listingCode = getListingCode(product, location);
+  const current  = getCount(pid, lid);
+
+  let newCount;
+  if (currentMode === 'sold')  newCount = Math.max(0, current - selectedQty);
+  if (currentMode === 'add')   newCount = current + selectedQty;
+  if (currentMode === 'edit')  newCount = selectedQty;
+
+  setCount(pid, lid, newCount);
+  const salePrice = getEffectivePrice(pid, lid);
+
+  // Log to history
+  const entry = {
+    id: 'h' + Date.now(),
+    type: currentMode,
+    productId: pid,
+    locationId: lid,
+    productName: product?.name || pid,
+    productCode: product?.code || '',
+    listingCode,
+    locationName: locName,
+    qty: selectedQty,
+    newTotal: newCount,
+    salePrice,
+    revenue: currentMode === 'sold' ? +(salePrice * selectedQty).toFixed(2) : 0,
+    note,
+    ts: new Date().toISOString(),
+  };
+  history.unshift(entry);
+  if (history.length > 500) history = history.slice(0, 500);
+  save('history');
+
+  // Fire webhook
+  fireWebhook(entry);
+
+  const messages = {
+    sold: `−${selectedQty} ${product?.name} in ${locName} → ${newCount} left`,
+    add:  `+${selectedQty} ${product?.name} in ${locName} → ${newCount} total`,
+    edit: `Set ${product?.name} in ${locName} to ${newCount}`,
+  };
+  showToast(messages[currentMode], currentMode === 'sold' ? 'red' : currentMode === 'add' ? 'green' : 'amber');
+
+  // Reset qty
+  selectedQty = null;
+  customActive = false;
+  document.getElementById('customRow').classList.remove('visible');
+  document.getElementById('customQtyInput').value = '';
+  document.getElementById('qNote').value = '';
+  document.querySelectorAll('.qty-btn').forEach(b =>
+    b.classList.remove('selected-sold','selected-add','selected-edit'));
+  updateAlerts();
+}
+
+// ── WEBHOOK ───────────────────────────────────────────────────────────────
+async function fireWebhook(entry) {
+  const url = localStorage.getItem(K.webhook);
+  if (!url) return;
+  try {
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        event: entry.type,
+        product: entry.productName,
+        product_code: entry.productCode,
+        listing_code: entry.listingCode,
+        location: entry.locationName,
+        quantity_changed: entry.qty,
+        new_total: entry.newTotal,
+        sale_price: entry.salePrice,
+        revenue: entry.revenue,
+        note: entry.note,
+        timestamp: entry.ts,
+      }),
+    });
+  } catch(e) { console.warn('Webhook failed', e); }
+}
+
+function saveWebhook() {
+  webhookUrl = document.getElementById('webhookUrl').value.trim();
+  localStorage.setItem(K.webhook, webhookUrl);
+}
+
+async function testWebhook() {
+  const url = document.getElementById('webhookUrl').value.trim();
+  if (!url) { showToast('Enter a webhook URL first', 'amber'); return; }
+  try {
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event: 'test', message: 'StockShift webhook test', timestamp: new Date().toISOString() }),
+    });
+    showToast('Webhook sent ✓', 'green');
+  } catch(e) { showToast('Webhook failed: ' + e.message, 'red'); }
+}
+
+// ── SELECTS ───────────────────────────────────────────────────────────────
+function populateSelects() {
+  const locSel  = document.getElementById('qLocation');
+  const prodSel = document.getElementById('qProduct');
+  const savedLoc  = locSel.value;
+  const savedProd = prodSel.value;
+
+  locSel.innerHTML  = '<option value="">Select location…</option>' +
+    locations.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+  prodSel.innerHTML = '<option value="">Select product…</option>' +
+    products.map(p => `<option value="${p.id}">${p.name} (${p.code})</option>`).join('');
+
+  if (savedLoc)  locSel.value  = savedLoc;
+  if (savedProd) prodSel.value = savedProd;
+}
+
+// ── ROTATION CALENDAR ─────────────────────────────────────────────────────
+function renderRotationCalendar() {
+  const card = document.getElementById('rotationCard');
+  if (!card) return;
+  const currentWeekIdx = getCurrentWeek(); // 0-3 or null
+  const dir = currentWeekIdx !== null ? DIRS[currentWeekIdx] : null;
+
+  const cells = DIRS.map((d, i) => {
+    const isCurrent = i === currentWeekIdx;
+    const style = isCurrent
+      ? `border-color:${d.color};background:${d.color}22;`
+      : '';
+    const textColor = isCurrent ? d.color : 'var(--text3)';
+    return `<div class="rot-cell ${isCurrent?'current':''}" style="${style}">
+      <div class="rot-cell-dir" style="color:${textColor}">${d.key}</div>
+      <div class="rot-cell-week" style="color:${isCurrent?d.color:'var(--text3)'}">WK${d.week}</div>
+    </div>`;
+  }).join('');
+
+  const msg = dir
+    ? `<div class="rot-msg" style="color:${dir.color}">↻ Refresh ${dir.label} listings this week</div>
+       <div class="rot-sub">Delete ${dir.key} ads → repost with new photos & copy</div>`
+    : `<div class="rot-msg" style="color:var(--text3)">Set your cycle start date below</div>
+       <div class="rot-sub">App will auto-calculate which week to refresh</div>`;
+
+  const today = new Date().toISOString().slice(0,10);
+  const dateVal = rotationStart || today;
+
+  card.innerHTML = `
+    <div class="rot-header">
+      <span class="rot-title">Ad Rotation</span>
+      ${rotationStart ? `<span style="font-family:'Azeret Mono',monospace;font-size:0.6rem;color:var(--text3);">Started ${rotationStart}</span>` : ''}
+    </div>
+    <div class="rot-grid">${cells}</div>
+    ${msg}
+    <div class="rot-setup">
+      <input type="date" class="rot-date-input" id="rotDateInput" value="${dateVal}">
+      <button class="small-btn green" onclick="setRotationStart(document.getElementById('rotDateInput').value)">Set Start</button>
+    </div>`;
+}
+
+// ── PRICE MODAL ───────────────────────────────────────────────────────────
+let _pmPid = null, _pmLid = null;
+
+function openPriceModal(pid, lid, productName, listingCode) {
+  _pmPid = pid; _pmLid = lid;
+  document.getElementById('pmTitle').textContent = productName;
+  document.getElementById('pmSub').textContent = listingCode;
+  document.getElementById('pmPrice').value = getPrice(pid, lid) || '';
+  document.getElementById('pmDiscount').value = getDiscount(pid, lid) || 0;
+  updateEffective();
+  document.getElementById('priceModal').style.display = 'flex';
+}
+
+function closePriceModal() {
+  document.getElementById('priceModal').style.display = 'none';
+  _pmPid = null; _pmLid = null;
+}
+
+function updateEffective() {
+  const price = parseFloat(document.getElementById('pmPrice').value) || 0;
+  const disc  = parseFloat(document.getElementById('pmDiscount').value) || 0;
+  const eff   = disc > 0 ? (price * (1 - disc/100)).toFixed(2) : price.toFixed(2);
+  const el    = document.getElementById('pmEffective');
+  el.textContent = disc > 0
+    ? `Effective price: $${eff} (${disc}% off $${price})`
+    : price > 0 ? `Price: $${eff}` : '';
+}
+
+function savePriceModal() {
+  if (!_pmPid || !_pmLid) return;
+  const price = parseFloat(document.getElementById('pmPrice').value) || 0;
+  const disc  = parseFloat(document.getElementById('pmDiscount').value) || 0;
+  setPrice(_pmPid, _pmLid, price, disc);
+  closePriceModal();
+  renderInventory();
+  showToast('Price saved', 'green');
+}
+
+// ── INVENTORY RENDER ──────────────────────────────────────────────────────
+let activeLocFilter = 'all';
+
+function filterLoc(chip) {
+  activeLocFilter = chip.dataset.loc;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  renderInventory();
+}
+
+function renderLocFilters() {
+  const row = document.getElementById('locFilterRow');
+  // Group by city for compact display
+  const cities = ['BAL','WIN','WAY'];
+  const cityLabels = { BAL:'Baltimore', WIN:'Winchester', WAY:'Waynesboro' };
+  let html = '<div class="filter-chip active" data-loc="all" onclick="filterLoc(this)">All</div>';
+  cities.forEach(city => {
+    html += `<div class="filter-chip" data-loc="city_${city}" onclick="filterLoc(this)">${cityLabels[city]}</div>`;
+  });
+  locations.forEach(l => {
+    html += `<div class="filter-chip" data-loc="${l.id}" onclick="filterLoc(this)">${l.subCode}</div>`;
+  });
+  row.innerHTML = html;
+}
+
+function renderInventory() {
+  const list = document.getElementById('invList');
+  if (!products.length || !locations.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">📦</div>Add products and locations in Setup.</div>';
+    return;
+  }
+
+  const rows = [];
+  for (const p of products) {
+    for (const l of locations) {
+      if (activeLocFilter !== 'all') {
+        if (activeLocFilter.startsWith('city_')) {
+          const city = activeLocFilter.replace('city_','');
+          if (l.cityCode !== city) continue;
+        } else {
+          if (l.id !== activeLocFilter) continue;
+        }
+      }
+      const count = getCount(p.id, l.id);
+      rows.push({ product: p, location: l, count });
+    }
+  }
+
+  if (!rows.length) { list.innerHTML = '<div class="empty">No inventory for this filter.</div>'; return; }
+
+  const currentWeekIdx = getCurrentWeek();
+
+  list.innerHTML = rows.map(r => {
+    const t = r.product.threshold || 2;
+    const cls = r.count === 0 ? 'zero' : r.count <= 2 ? 'low' : r.count <= t ? 'mid' : 'high';
+    const listingCode = getListingCode(r.product, r.location);
+    const effPrice = getEffectivePrice(r.product.id, r.location.id);
+    const basePrice = getPrice(r.product.id, r.location.id);
+    const disc = getDiscount(r.product.id, r.location.id);
+    const isCurrentWeek = currentWeekIdx !== null && (r.location.rotWeek - 1) === currentWeekIdx;
+    const priceDisplay = disc > 0
+      ? `<span class="discounted">$${effPrice}</span> <span style="text-decoration:line-through;font-size:0.58rem;">$${basePrice}</span>`
+      : (effPrice > 0 ? `$${effPrice}` : '—');
+    return `
+      <div class="inv-card" style="${isCurrentWeek ? 'border-color:var(--amber);' : ''}">
+        <div class="inv-qty-badge ${cls}">${r.count}</div>
+        <div class="inv-info">
+          <div class="inv-name">${r.product.name}</div>
+          <div class="inv-meta">${listingCode}${isCurrentWeek ? ' <span style="color:var(--amber);font-size:0.6rem;">↻ THIS WEEK</span>' : ''}</div>
+        </div>
+        <div class="inv-price" onclick="openPriceModal('${r.product.id}','${r.location.id}','${r.product.name}','${listingCode}')">${priceDisplay}<div style="font-size:0.5rem;color:var(--text3);margin-top:1px;">tap to edit</div></div>
+      </div>`;
+  }).join('');
+}
+
+// ── HISTORY RENDER ────────────────────────────────────────────────────────
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (!history.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">📋</div>No transactions yet.</div>';
+    return;
+  }
+  list.innerHTML = history.slice(0, 100).map(h => {
+    const sign = h.type === 'sold' ? '−' : h.type === 'add' ? '+' : '→';
+    const dt = new Date(h.ts);
+    const timeStr = dt.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' ' +
+      dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    return `
+      <div class="history-item">
+        <div class="history-dot ${h.type}"></div>
+        <div class="history-info">
+          <div class="history-main">${h.productName} <span style="color:var(--text3);font-size:0.72rem;">(${h.listingCode || h.productCode})</span></div>
+          <div class="history-sub">${h.locationName} · ${timeStr}${h.note ? ' · ' + h.note : ''}</div>
+        </div>
+        <div class="history-qty ${h.type}">${sign}${h.qty}</div>
+      </div>`;
+  }).join('');
+}
+
+function clearHistory() {
+  if (!confirm('Clear all transaction history?')) return;
+  history = [];
+  save('history');
+  renderHistory();
+}
+
+// ── SETUP ─────────────────────────────────────────────────────────────────
+function renderSetup() {
+  const pList = document.getElementById('productSetupList');
+  const lList = document.getElementById('locationSetupList');
+
+  pList.innerHTML = products.length ? products.map((p,i) => `
+    <div class="setup-item">
+      <div>
+        <div class="setup-item-name">${p.name}</div>
+        <div class="setup-item-meta">${p.code} · $${p.price} · Alert at ${p.threshold}</div>
+      </div>
+      <button class="small-btn" onclick="deleteProduct(${i})" style="color:var(--red);border-color:rgba(239,68,68,0.2)">Del</button>
+    </div>`).join('') :
+    '<div style="padding:14px 16px;font-size:0.75rem;color:var(--text3);">No products yet.</div>';
+
+  lList.innerHTML = locations.length ? locations.map((l,i) => {
+    const fullCode = l.subCode ? `${l.cityCode}-${l.subCode}` : l.cityCode || '';
+    return `
+    <div class="setup-item">
+      <div>
+        <div class="setup-item-name">${l.name}</div>
+        <div class="setup-item-meta">${fullCode} · Wk${l.rotWeek||'?'}</div>
+      </div>
+      <button class="small-btn" onclick="deleteLocation(${i})" style="color:var(--red);border-color:rgba(239,68,68,0.2)">Del</button>
+    </div>`}).join('') :
+    '<div style="padding:14px 16px;font-size:0.75rem;color:var(--text3);">No locations yet.</div>';
+}
+
+function toggleNewProduct() {
+  const f = document.getElementById('newProductForm');
+  f.classList.toggle('open');
+  if (f.classList.contains('open')) document.getElementById('npName').focus();
+}
+
+function saveNewProduct() {
+  const name = document.getElementById('npName').value.trim();
+  const code = document.getElementById('npCode').value.trim();
+  if (!name || !code) { showToast('Name and code required', 'amber'); return; }
+  products.push({
+    id: 'p' + Date.now(),
+    name,
+    code,
+    price: parseFloat(document.getElementById('npPrice').value) || 0,
+    threshold: parseInt(document.getElementById('npThreshold').value) || 3,
+  });
+  save('products');
+  document.getElementById('npName').value = '';
+  document.getElementById('npCode').value = '';
+  document.getElementById('npPrice').value = '';
+  document.getElementById('npThreshold').value = '';
+  document.getElementById('newProductForm').classList.remove('open');
+  renderSetup();
+  populateSelects();
+  renderLocFilters();
+  showToast('Product saved', 'green');
+}
+
+function deleteProduct(i) {
+  if (!confirm(`Delete ${products[i].name}?`)) return;
+  products.splice(i, 1);
+  save('products');
+  renderSetup();
+  populateSelects();
+  renderInventory();
+}
+
+function toggleNewLocation() {
+  const f = document.getElementById('newLocationForm');
+  f.classList.toggle('open');
+  if (f.classList.contains('open')) document.getElementById('nlName').focus();
+}
+
+function saveNewLocation() {
+  const name = document.getElementById('nlName').value.trim();
+  if (!name) { showToast('Location name required', 'amber'); return; }
+  locations.push({ id: 'loc' + Date.now(), name });
+  save('locations');
+  document.getElementById('nlName').value = '';
+  document.getElementById('newLocationForm').classList.remove('open');
+  renderSetup();
+  populateSelects();
+  renderLocFilters();
+  showToast('Location saved', 'green');
+}
+
+function deleteLocation(i) {
+  if (!confirm(`Delete ${locations[i].name}?`)) return;
+  locations.splice(i, 1);
+  save('locations');
+  renderSetup();
+  populateSelects();
+  renderLocFilters();
+  renderInventory();
+}
+
+// ── EXPORT ────────────────────────────────────────────────────────────────
+function exportFull() {
+  const data = { version: 1, exported: new Date().toISOString(), app: 'StockShift', products, locations, inventory, history };
+  download(JSON.stringify(data, null, 2), `stockshift-backup-${today()}.json`, 'application/json');
+  showToast('Backup exported', 'green');
+}
+
+function exportCSV() {
+  const rows = [['Listing Code','Product','Product Code','Location','Count','Low Threshold','Price']];
+  for (const p of products) {
+    for (const l of locations) {
+      const code = getListingCode(p, l);
+      rows.push([code, p.name, p.code, l.name, getCount(p.id, l.id), p.threshold, p.price]);
+    }
+  }
+  download(rows.map(r=>r.map(v=>`"${v}"`).join(',')).join('\n'), `stockshift-inventory-${today()}.csv`, 'text/csv');
+  showToast('CSV exported', 'green');
+}
+
+function exportHistoryCSV() {
+  const rows = [['Timestamp','Type','Product','Product Code','Listing Code','Location','Qty Changed','New Total','Sale Price','Revenue','Note']];
+  history.forEach(h => rows.push([h.ts, h.type, h.productName, h.productCode, h.listingCode||'', h.locationName, h.qty, h.newTotal, h.salePrice||'', h.revenue||'', h.note||'']));
+  download(rows.map(r=>r.map(v=>`"${v}"`).join(',')).join('\n'), `stockshift-log-${today()}.csv`, 'text/csv');
+  showToast('Log exported', 'green');
+}
+
+function download(content, filename, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], {type}));
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function today() { return new Date().toISOString().slice(0,10); }
+
+// ── IMPORT ────────────────────────────────────────────────────────────────
+function importData() { document.getElementById('importInput').click(); }
+
+function handleImport(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.app !== 'StockShift') { showToast('Not a StockShift backup', 'red'); return; }
+      if (!confirm(`Import ${data.products?.length||0} products, ${data.locations?.length||0} locations, and ${data.history?.length||0} history entries? This merges with existing data.`)) return;
+
+      // Merge products
+      const epids = new Set(products.map(p=>p.id));
+      (data.products||[]).forEach(p => { if(!epids.has(p.id)) products.push(p); else { const i=products.findIndex(x=>x.id===p.id); if(i>=0) products[i]=p; } });
+
+      // Merge locations
+      const elids = new Set(locations.map(l=>l.id));
+      (data.locations||[]).forEach(l => { if(!elids.has(l.id)) locations.push(l); });
+
+      // Merge inventory (take max)
+      Object.entries(data.inventory||{}).forEach(([k,v]) => {
+        inventory[k] = Math.max(inventory[k]||0, v);
+      });
+
+      // Merge history (dedupe by id)
+      const ehids = new Set(history.map(h=>h.id));
+      (data.history||[]).forEach(h => { if(!ehids.has(h.id)) history.push(h); });
+      history.sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+
+      save('products'); save('locations'); save('inventory'); save('history');
+      populateSelects(); renderLocFilters(); renderInventory(); renderHistory(); renderSetup();
+      showToast('Import complete', 'green');
+    } catch(err) { showToast('Import failed: ' + err.message, 'red'); }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────
+function showToast(msg, type='green') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── BOOT ──────────────────────────────────────────────────────────────────
+init();
+</script>
+
+<style>
+.ss-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;overflow-y:auto;}
+.ss-overlay-inner{background:var(--s1);border-radius:10px;max-width:640px;margin:40px auto;padding:20px;}
+.ss-overlay-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.ss-overlay-title{font-size:.8rem;font-weight:600;color:var(--text);}
+.ss-overlay-close{background:transparent;border:none;color:var(--text2);cursor:pointer;font-size:1rem;padding:4px;}
+</style>
+<div class="ss-overlay" id="ssOverlayWishlist">
+  <div class="ss-overlay-inner">
+    <div class="ss-overlay-hdr">
+      <div class="ss-overlay-title">Wishlist / Feature Requests</div>
+      <button class="ss-overlay-close" onclick="closeSsOverlay()">✕</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <input type="text" id="wishInput" placeholder="Add a feature idea…" style="flex:1;background:var(--s2);border:1px solid var(--border);border-radius:5px;padding:7px 9px;color:var(--text);font-size:.78rem;outline:none;" onkeydown="if(event.key==='Enter')addWish()">
+      <button onclick="addWish()" style="padding:7px 14px;background:var(--green);color:#0a0a0a;border:none;border-radius:5px;font-size:.65rem;cursor:pointer;font-weight:600;">Add</button>
+    </div>
+    <div id="wishList"></div>
+    <div style="margin-top:16px;"><button onclick="clearDoneWishes()" style="padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--text2);font-size:.58rem;cursor:pointer;">Clear Completed</button></div>
+  </div>
+</div>
+<div class="ss-overlay" id="ssOverlayDebug">
+  <div class="ss-overlay-inner">
+    <div class="ss-overlay-hdr">
+      <div class="ss-overlay-title">Debug Log</div>
+      <button class="ss-overlay-close" onclick="closeSsOverlay()">✕</button>
+    </div>
+    <div style="margin-bottom:12px;display:flex;gap:8px;">
+      <button onclick="clearDebugLog()" style="padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--text2);font-size:.58rem;cursor:pointer;">Clear</button>
+      <button onclick="syncDebugFromSheet()" style="padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--text2);font-size:.58rem;cursor:pointer;">Sync from Sheet</button>
+    </div>
+    <div id="debugList"><div style="color:var(--text2);font-size:.72rem;">No errors logged.</div></div>
+  </div>
+</div><script>
+// ── BARREL TOOLS: WISHLIST + DEBUG ────────────────────────────────────────
+var BT_WORKER='https://barrel-tools.brett-2f8.workers.dev';
+var BT_APP='ss';
+var WL_KEY='bt_wish_'+BT_APP;
+var DBG_KEY='bt_dbg_'+BT_APP;
+function _getWishes(){try{return JSON.parse(localStorage.getItem(WL_KEY)||'[]');}catch(e){return[];}}
+function _saveWishes(w){localStorage.setItem(WL_KEY,JSON.stringify(w));}
+function _getDbg(){try{return JSON.parse(localStorage.getItem(DBG_KEY)||'[]');}catch(e){return[];}}
+function _saveDbg(l){localStorage.setItem(DBG_KEY,JSON.stringify(l));}
+function _esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function addWish(){
+  var inp=document.getElementById('wishInput'),txt=inp.value.trim();
+  if(!txt)return;
+  var item={app:BT_APP,id:String(Date.now()),text:txt,done:false,ts:new Date().toLocaleDateString()};
+  var w=_getWishes();w.unshift(item);_saveWishes(w);inp.value='';renderWishes();
+  fetch(BT_WORKER+'/wishlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'add',...item})}).catch(function(){});
+}
+function toggleWish(id){
+  var w=_getWishes().map(function(x){return x.id===id?Object.assign({},x,{done:!x.done}):x;});
+  _saveWishes(w);renderWishes();
+  var item=w.find(function(x){return x.id===id;});
+  fetch(BT_WORKER+'/wishlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'toggle',id:id,app:BT_APP,done:item.done})}).catch(function(){});
+}
+function clearDoneWishes(){
+  _saveWishes(_getWishes().filter(function(x){return !x.done;}));renderWishes();
+  fetch(BT_WORKER+'/wishlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'clearDone',app:BT_APP})}).catch(function(){});
+}
+function renderWishes(){
+  var el=document.getElementById('wishList');if(!el)return;
+  var w=_getWishes();
+  if(!w.length){el.innerHTML='<div style="color:var(--text2,#888);font-size:.72rem;padding:8px 0;">No items yet.</div>';return;}
+  el.innerHTML=w.map(function(i){
+    return '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--s2,#1a1a1a);border:1px solid var(--border,#2a2a2a);border-radius:7px;margin-bottom:6px;">'
+      +'<div onclick="toggleWish(\''+i.id+'\')" style="width:14px;height:14px;border:1px solid '+(i.done?'var(--green,#22c55e)':'var(--border,#2a2a2a)')+';border-radius:3px;flex-shrink:0;cursor:pointer;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:.6rem;color:var(--green,#22c55e);background:'+(i.done?'rgba(34,197,94,.12)':'transparent')+';">'+(i.done?'&#10003;':'')+'</div>'
+      +'<div style="flex:1;"><div style="font-size:.78rem;'+(i.done?'text-decoration:line-through;color:var(--text2,#888);':'')+'">'+_esc(i.text)+'</div>'
+      +'<div style="font-size:.57rem;color:var(--text2,#888);margin-top:3px;">'+i.ts+'</div></div></div>';
+  }).join('');
+}
+function logDebug(msg){
+  var l=_getDbg(),entry={app:BT_APP,msg:msg,ts:new Date().toLocaleString()};
+  l.unshift(entry);if(l.length>50)l=l.slice(0,50);_saveDbg(l);
+  fetch(BT_WORKER+'/debug',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'log',...entry})}).catch(function(){});
+}
+function clearDebugLog(){
+  _saveDbg([]);renderDebugLog();
+  fetch(BT_WORKER+'/debug',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'clear',app:BT_APP})}).catch(function(){});
+}
+function syncDebugFromSheet(){
+  fetch(BT_WORKER+'/debug?app='+BT_APP).then(function(r){return r.json();}).then(function(data){_saveDbg(data);renderDebugLog();}).catch(function(){});
+}
+function renderDebugLog(){
+  var el=document.getElementById('debugList');if(!el)return;
+  var l=_getDbg();
+  if(!l.length){el.innerHTML='<div style="color:var(--text2,#888);font-size:.72rem;">No errors logged.</div>';return;}
+  el.innerHTML=l.map(function(e){
+    return '<div style="padding:9px 12px;background:var(--s2,#1a1a1a);border:1px solid rgba(239,68,68,.2);border-radius:6px;margin-bottom:6px;">'
+      +'<div style="font-family:monospace;font-size:.68rem;color:var(--red,#ef4444);">'+_esc(e.msg)+'</div>'
+      +'<div style="font-size:.57rem;color:var(--text2,#888);margin-top:3px;">'+e.ts+'</div></div>';
+  }).join('');
+}
+
+function showSsOverlay(which){
+  document.getElementById('ssOverlayWishlist').style.display='none';
+  document.getElementById('ssOverlayDebug').style.display='none';
+  if(which==='wishlist'){
+    document.getElementById('ssOverlayWishlist').style.display='block';
+    syncWishesFromSheet();
+  } else {
+    document.getElementById('ssOverlayDebug').style.display='block';
+    renderDebugLog();
+  }
+}
+function closeSsOverlay(){
+  document.getElementById('ssOverlayWishlist').style.display='none';
+  document.getElementById('ssOverlayDebug').style.display='none';
+}
+function syncWishesFromSheet(){
+  fetch(BT_WORKER+'/wishlist?app='+BT_APP).then(function(r){return r.json();}).then(function(data){_saveWishes(data);renderWishes();}).catch(function(){renderWishes();});
+}
+function syncDebugFromSheet(){
+  fetch(BT_WORKER+'/debug?app='+BT_APP).then(function(r){return r.json();}).then(function(data){_saveDbg(data);renderDebugLog();}).catch(function(){renderDebugLog();});
+}
+</script>
+</body>
+</html>
