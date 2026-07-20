@@ -1,0 +1,18 @@
+# Cloudflare Worker deploy config for BarrelCo.
+# Purpose: enable push-to-main auto-deploy via Cloudflare Workers Builds.
+# keep_vars = true is CRITICAL — it preserves the env vars and secrets set in
+# the Cloudflare dashboard (ANTHROPIC_API_KEY, SHEET_ID, SERVICE_ACCOUNT_EMAIL,
+# SERVICE_ACCOUNT_KEY) so a deploy never wipes them.
+#
+# NOTE ON 1042: BarrelCo is a CALLEE of the cross-hub sync (BrettOS fetches
+# /public/entities-feed from here), not a caller, so it originates no cross-Worker
+# fetch and needs no code change. The 1042 fix lives in the brett-os Worker via
+# Service Bindings. This file only wires auto-deploy.
+
+name = "barrel-co"
+main = "worker.js"
+compatibility_date = "2026-06-08"
+keep_vars = true
+workers_dev = true
+
+# Git auto-deploy connected via Cloudflare Workers Builds.
