@@ -1697,16 +1697,7 @@ async function generateOne(prod,loc,oNote,idx,allLocNames,allLocs){
     +'4. Under 70 characters. No city name. No ALL CAPS.\n'
     +'5. Think about what angle would stop a DIFFERENT type of buyer scrolling in this specific area.\n'
     +'Available angles (use each only once per session, or invent new ones):\n'
-    +'- Lead with a sensory detail ("Still Smells Like Bourbon", "Charred Oak From a Real Distillery")\n'
-    +'- Lead with a use case ("Fire Pit Side Table Ready", "Plant It Today")\n'
-    +'- Lead with scarcity or quantity ("3 Left", "Going Fast")\n'
-    +'- Lead with provenance ("Straight From a Licensed Distillery")\n'
-    +'- Lead with size/spec ("53-Gallon White Oak Barrel")\n'
-    +'- Lead with value ("Cheaper Than Anywhere Online")\n'
-    +'- Lead with action ("Pick Up Today", "Grab One Before They Go")\n'
-    +'- Lead with the buyer ("For the Bourbon Lover", "Gardeners — Real Oak Planter")\n'
-    +'- Lead with contrast ("Not a Replica — Real Distillery Barrel")\n'
-    +'- Lead with a question or curiosity hook\n';
+    +(VENTURES[CURRENT_VENTURE].titleAngles||[]).map(function(a){return '- '+a+'\n';}).join('');
 
   var prompt='Write a Facebook Marketplace listing. Be specific, confident, and genuinely varied. No filler. No clichés.\n\n'
     +'PRODUCT: '+prod.name+'\n'
