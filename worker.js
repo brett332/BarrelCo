@@ -214,22 +214,23 @@ async function appendRow(env, token, tab, values) {
   );
 }
 
-async function writeInventory(env, token, { pid, lid, count, ts }) {
+async function writeInventory(env, token, { pid, lid, count, ts, venture }) {
+  const v = venture || 'barrelco';
   // Read current inventory to find existing row or append
   const data = await readSheet(env, token, 'Inventory');
   const rows = data.values || [];
-  // rows[0] = header: ProductId, LocationId, Count, LastUpdated
-  let rowIdx = rows.findIndex((r, i) => i > 0 && r[0] === pid && r[1] === lid);
+  // rows[0] = header: ProductId, LocationId, Count, LastUpdated, Venture
+  let rowIdx = rows.findIndex((r, i) => i > 0 && r[0] === pid && r[1] === lid && (r[4] || 'barrelco') === v);
   if (rowIdx === -1) {
-    await appendRow(env, token, 'Inventory', [pid, lid, count, ts]);
+    await appendRow(env, token, 'Inventory', [pid, lid, count, ts, v]);
   } else {
-    const range = `Inventory!C${rowIdx + 1}:D${rowIdx + 1}`;
+    const range = `Inventory!C${rowIdx + 1}:E${rowIdx + 1}`;
     await fetch(
       `https://sheets.googleapis.com/v4/spreadsheets/${env.SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`,
       {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ values: [[count, ts]] }),
+        body: JSON.stringify({ values: [[count, ts, v]] }),
       }
     );
   }
