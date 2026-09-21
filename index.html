@@ -1140,8 +1140,14 @@ body { margin:0; }
 <script>
 var WORKER = 'https://barrel-co.brett-2f8.workers.dev/ai';
 
-// ── PRODUCTS ────────────────────────────────────────────────────────────────
-var PRODUCTS = [
+// ── VENTURES ─────────────────────────────────────────────────────────────────
+// Each venture bundles its own products, locations, per-location pickup/
+// delivery defaults, and title-angle examples used by generateOne() below.
+// Add a new venture by adding a key here (or via the Setup screen once built).
+var VENTURES = {
+  barrelco: {
+    id:'barrelco', name:'BarrelCo',
+    products: [
   {
     id:'ob2', name:'White Oak Whiskey Barrels (Full)', code:'OB2',
     priceEach:'$85',
@@ -1376,46 +1382,121 @@ var PRODUCTS = [
     payment:['Venmo','Cash App','Zelle','PayPal'],
     notes:'Large size — great for trees, shrubs, commercial use. Bulk pricing available.'
   }
-];
-
-// ── DEFAULT LOCATION SETTINGS ────────────────────────────────────────────────
-var DEFAULT_LOC_SETTINGS = {
-  bal_n:  { pickup:'Woodlawn, off Security Blvd and I-695 — easy highway access from anywhere in the metro', delivery:'Delivery available in the Baltimore area for an additional charge — message for a quote', includeDelivery:true  },
-  bal_s:  { pickup:'Woodlawn, off Security Blvd and I-695 — easy highway access from anywhere in the metro', delivery:'Delivery available in the Baltimore area for an additional charge — message for a quote', includeDelivery:true  },
-  bal_e:  { pickup:'Woodlawn, off Security Blvd and I-695 — easy highway access from anywhere in the metro', delivery:'Delivery available in the Baltimore area for an additional charge — message for a quote', includeDelivery:true  },
-  bal_w:  { pickup:'Woodlawn, off Security Blvd and I-695 — easy highway access from anywhere in the metro', delivery:'Delivery available in the Baltimore area for an additional charge — message for a quote', includeDelivery:true  },
-  bal_l:  { pickup:'Woodlawn, off Security Blvd and I-695 — easy highway access from anywhere in the metro', delivery:'Delivery available in the Baltimore area for an additional charge — message for a quote', includeDelivery:true  },
-  way:    { pickup:'Waynesboro VA — easy access from I-64', delivery:'', includeDelivery:false },
-  way_e:  { pickup:'Waynesboro VA east side — easy access from I-64', delivery:'', includeDelivery:false },
-  way_n:  { pickup:'Waynesboro VA north side — easy access from I-64', delivery:'', includeDelivery:false },
-  win:    { pickup:'', delivery:'', includeDelivery:false },
-  rur:    { pickup:'', delivery:'', includeDelivery:false }
+    ],
+    locSettings: {
+      bal_n:  { pickup:'Woodlawn, off Security Blvd and I-695 — easy highway access from anywhere in the metro', delivery:'Delivery available in the Baltimore area for an additional charge — message for a quote', includeDelivery:true  },
+      bal_s:  { pickup:'Woodlawn, off Security Blvd and I-695 — easy highway access from anywhere in the metro', delivery:'Delivery available in the Baltimore area for an additional charge — message for a quote', includeDelivery:true  },
+      bal_e:  { pickup:'Woodlawn, off Security Blvd and I-695 — easy highway access from anywhere in the metro', delivery:'Delivery available in the Baltimore area for an additional charge — message for a quote', includeDelivery:true  },
+      bal_w:  { pickup:'Woodlawn, off Security Blvd and I-695 — easy highway access from anywhere in the metro', delivery:'Delivery available in the Baltimore area for an additional charge — message for a quote', includeDelivery:true  },
+      bal_l:  { pickup:'Woodlawn, off Security Blvd and I-695 — easy highway access from anywhere in the metro', delivery:'Delivery available in the Baltimore area for an additional charge — message for a quote', includeDelivery:true  },
+      way:    { pickup:'Waynesboro VA — easy access from I-64', delivery:'', includeDelivery:false },
+      way_e:  { pickup:'Waynesboro VA east side — easy access from I-64', delivery:'', includeDelivery:false },
+      way_n:  { pickup:'Waynesboro VA north side — easy access from I-64', delivery:'', includeDelivery:false },
+      win:    { pickup:'', delivery:'', includeDelivery:false },
+      rur:    { pickup:'', delivery:'', includeDelivery:false }
+    },
+    locations: [
+      {id:'bal_n', name:'Baltimore — North',    cityCode:'BAL', skuSuffix:'N1'},
+      {id:'bal_s', name:'Baltimore — South',    cityCode:'BAL', skuSuffix:'S2'},
+      {id:'bal_e', name:'Baltimore — East',     cityCode:'BAL', skuSuffix:'E3'},
+      {id:'bal_w', name:'Baltimore — West',     cityCode:'BAL', skuSuffix:'W4'},
+      {id:'bal_l', name:'Baltimore — Laurel',   cityCode:'BAL', skuSuffix:'L5'},
+      {id:'way',   name:'Waynesboro, VA',       cityCode:'WAY', skuSuffix:'W1'},
+      {id:'way_e', name:'Waynesboro, VA — East',  cityCode:'WAY', skuSuffix:'E2'},
+      {id:'way_n', name:'Waynesboro, VA — North', cityCode:'WAY', skuSuffix:'N3'},
+      {id:'win',   name:'Winchester, VA',       cityCode:'WIN', skuSuffix:'W1'},
+      {id:'rur',   name:'Rural / Frederick MD', cityCode:'RUR', skuSuffix:'R1'}
+    ],
+    titleAngles: [
+      'Lead with a sensory detail ("Still Smells Like Bourbon", "Charred Oak From a Real Distillery")',
+      'Lead with a use case ("Fire Pit Side Table Ready", "Plant It Today")',
+      'Lead with scarcity or quantity ("3 Left", "Going Fast")',
+      'Lead with provenance ("Straight From a Licensed Distillery")',
+      'Lead with size/spec ("53-Gallon White Oak Barrel")',
+      'Lead with value ("Cheaper Than Anywhere Online")',
+      'Lead with action ("Pick Up Today", "Grab One Before They Go")',
+      'Lead with the buyer ("For the Bourbon Lover", "Gardeners — Real Oak Planter")',
+      'Lead with contrast ("Not a Replica — Real Distillery Barrel")',
+      'Lead with a question or curiosity hook'
+    ]
+  },
+  rentalco: {
+    id:'rentalco', name:'Rental Co',
+    products: [],
+    locSettings: {},
+    locations: [],
+    titleAngles: [
+      'Lead with a condition/sensory detail (how clean, new, or well-kept it looks)',
+      'Lead with a use case (who needs this and why, today)',
+      'Lead with availability ("Available Now", "Ready This Week")',
+      'Lead with history (age, prior use, maintenance record)',
+      'Lead with size/spec (capacity, dimensions, key numbers)',
+      'Lead with value (compare to buying or renting new)',
+      'Lead with action ("Move-In Ready", "Book It Today")',
+      'Lead with the renter (who this is perfect for)',
+      'Lead with contrast (why this beats the obvious alternative)',
+      'Lead with a question or curiosity hook'
+    ]
+  }
 };
 
-// ── LOCATIONS ────────────────────────────────────────────────────────────────
-var LOCATIONS = [
-  {id:'bal_n', name:'Baltimore — North',    cityCode:'BAL', skuSuffix:'N1'},
-  {id:'bal_s', name:'Baltimore — South',    cityCode:'BAL', skuSuffix:'S2'},
-  {id:'bal_e', name:'Baltimore — East',     cityCode:'BAL', skuSuffix:'E3'},
-  {id:'bal_w', name:'Baltimore — West',     cityCode:'BAL', skuSuffix:'W4'},
-  {id:'bal_l', name:'Baltimore — Laurel',   cityCode:'BAL', skuSuffix:'L5'},
-  {id:'way',   name:'Waynesboro, VA',       cityCode:'WAY', skuSuffix:'W1'},
-  {id:'way_e', name:'Waynesboro, VA — East',  cityCode:'WAY', skuSuffix:'E2'},
-  {id:'way_n', name:'Waynesboro, VA — North', cityCode:'WAY', skuSuffix:'N3'},
-  {id:'win',   name:'Winchester, VA',       cityCode:'WIN', skuSuffix:'W1'},
-  {id:'rur',   name:'Rural / Frederick MD', cityCode:'RUR', skuSuffix:'R1'}
-];
+var CURRENT_VENTURE = localStorage.getItem('bc_venture') || 'barrelco';
+if(!VENTURES[CURRENT_VENTURE]) CURRENT_VENTURE = 'barrelco';
+
+// ── PRODUCTS / LOCATIONS / SETTINGS (bound to the active venture) ───────────
+var PRODUCTS = VENTURES[CURRENT_VENTURE].products;
+var LOCATIONS = VENTURES[CURRENT_VENTURE].locations;
+var DEFAULT_LOC_SETTINGS = VENTURES[CURRENT_VENTURE].locSettings;
 
 function buildSKU(prod,loc){ return loc.cityCode+'-'+prod.code+'-'+loc.skuSuffix; }
 
-// ── LOCATION SETTINGS (localStorage) ────────────────────────────────────────
+// ── VENTURE SWITCHING ────────────────────────────────────────────────────────
+function switchVenture(ventureId){
+  if(!VENTURES[ventureId] || ventureId===CURRENT_VENTURE) return;
+  CURRENT_VENTURE = ventureId;
+  localStorage.setItem('bc_venture', CURRENT_VENTURE);
+  PRODUCTS = VENTURES[CURRENT_VENTURE].products;
+  LOCATIONS = VENTURES[CURRENT_VENTURE].locations;
+  DEFAULT_LOC_SETTINGS = VENTURES[CURRENT_VENTURE].locSettings;
+  usedDimIdx = {};
+  renderVentureUI();
+  renderVentureSwitcher();
+  var empty=document.getElementById('emptyState');
+  if(empty) empty.style.display='';
+  var ra=document.getElementById('ra');
+  if(ra) ra.innerHTML='';
+  var btn=document.getElementById('genBtn');
+  if(btn){ btn.disabled=true; btn.textContent='Generate Listings →'; }
+}
+
+function renderVentureSwitcher(){
+  var sel=document.getElementById('ventureSelect');
+  if(!sel) return;
+  sel.innerHTML=Object.keys(VENTURES).map(function(vid){
+    return '<option value="'+vid+'"'+(vid===CURRENT_VENTURE?' selected':'')+'>'+VENTURES[vid].name+'</option>';
+  }).join('');
+}
+
+// ── LOCATION SETTINGS (localStorage, namespaced per venture) ────────────────
 function getLocSettings(locId){
-  var saved = localStorage.getItem('lf_loc_'+locId);
+  var nsKey='lf_loc_'+CURRENT_VENTURE+'_'+locId;
+  var saved=localStorage.getItem(nsKey);
   if(saved){ try{ return JSON.parse(saved); }catch(e){} }
-  return JSON.parse(JSON.stringify(DEFAULT_LOC_SETTINGS[locId]||{pickup:'',delivery:'',includeDelivery:false}));
+  // One-time migration of pre-venture keys, BarrelCo only
+  if(CURRENT_VENTURE==='barrelco'){
+    var legacy=localStorage.getItem('lf_loc_'+locId);
+    if(legacy){
+      try{
+        var parsed=JSON.parse(legacy);
+        localStorage.setItem(nsKey, legacy);
+        return parsed;
+      }catch(e){}
+    }
+  }
+  return JSON.parse(JSON.stringify(VENTURES[CURRENT_VENTURE].locSettings[locId]||{pickup:'',delivery:'',includeDelivery:false}));
 }
 function saveLocSettings(locId, settings){
-  localStorage.setItem('lf_loc_'+locId, JSON.stringify(settings));
+  localStorage.setItem('lf_loc_'+CURRENT_VENTURE+'_'+locId, JSON.stringify(settings));
 }
 
 // ── DIMENSION TRACKING ───────────────────────────────────────────────────────
