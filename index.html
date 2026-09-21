@@ -3027,6 +3027,7 @@ function confirmEntry() {
   history.unshift(entry);
   if (history.length > 500) history = history.slice(0, 500);
   save('history');
+  syncHistoryToSheet(entry);
 
   // Fire webhook
   fireWebhook(entry);
