@@ -1539,6 +1539,7 @@ function renderVentureUI(){
   });
 
   var ll=document.getElementById('locList');
+  ll.innerHTML='';
   LOCATIONS.forEach(function(loc){
     var settings=getLocSettings(loc.id);
     var wrap=document.createElement('div');
