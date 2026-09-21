@@ -1469,6 +1469,7 @@ function switchVenture(ventureId){
   var btn=document.getElementById('genBtn');
   if(btn){ btn.disabled=true; btn.textContent='Generate Listings →'; }
   if(typeof psLoadLocsForVenture==='function') psLoadLocsForVenture();
+  if(typeof ssApplyVenture==='function') ssApplyVenture();
 }
 
 function renderVentureSwitcher(){
