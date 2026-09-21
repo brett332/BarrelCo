@@ -2727,6 +2727,27 @@ function saveDefaultPrices() {
   localStorage.setItem(K.prices, JSON.stringify(prices));
 }
 
+// ── VENTURE SUPPORT ──────────────────────────────────────────────────────────
+// K's values are the ORIGINAL (pre-venture) key names; mutate them in place
+// to point at this venture's namespaced storage instead of touching every
+// K.products/K.locations/... call site throughout this file.
+const K_BASE = Object.assign({}, K);
+function ssApplyVenture(){
+  Object.keys(K_BASE).forEach(function(name){
+    K[name] = K_BASE[name] + '_' + CURRENT_VENTURE;
+  });
+  // One-time migration of BarrelCo's pre-venture data into the namespaced keys
+  if (CURRENT_VENTURE === 'barrelco') {
+    Object.keys(K_BASE).forEach(function(name){
+      if (localStorage.getItem(K[name]) === null) {
+        const legacy = localStorage.getItem(K_BASE[name]);
+        if (legacy !== null) localStorage.setItem(K[name], legacy);
+      }
+    });
+  }
+  init();
+}
+
 // ── INIT ──────────────────────────────────────────────────────────────────
 function init() {
   try { products  = JSON.parse(localStorage.getItem(K.products))  || []; } catch(e){ products=[]; }
@@ -2740,8 +2761,10 @@ function init() {
   } catch(e){}
   webhookUrl = localStorage.getItem(K.webhook) || '';
 
-  if (products.length === 0)  seedDefaultProducts();
-  if (locations.length === 0) seedDefaultLocations();
+  // Only BarrelCo gets the hardcoded barrel defaults; other ventures start
+  // empty and Brett builds them out via the Setup tab's add/delete UI.
+  if (products.length === 0 && CURRENT_VENTURE === 'barrelco')  seedDefaultProducts();
+  if (locations.length === 0 && CURRENT_VENTURE === 'barrelco') seedDefaultLocations();
   saveDefaultPrices();
 
   if (document.getElementById('webhookUrl')) {
@@ -2754,6 +2777,7 @@ function init() {
   renderInventory();
   renderHistory();
   renderSetup();
+  ssSyncFromSheet();
 }
 
 function seedDefaultProducts() {
