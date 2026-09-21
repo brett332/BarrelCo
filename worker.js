@@ -238,7 +238,7 @@ async function writeInventory(env, token, { pid, lid, count, ts, venture }) {
 
 function historyRow(e) {
   return [e.id, e.ts, e.type, e.productId, e.productCode, e.locationId,
-    e.listingCode, e.locationName, e.qty, e.newTotal, e.salePrice, e.revenue, e.note || ''];
+    e.listingCode, e.locationName, e.qty, e.newTotal, e.salePrice, e.revenue, e.note || '', e.venture || 'barrelco'];
 }
 
 async function updateWishlistDone(env, token, id, done) {
