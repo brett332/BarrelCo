@@ -2823,8 +2823,73 @@ function save(key) {
 function invKey(pid, lid) { return `${pid}|${lid}`; }
 function getCount(pid, lid) { return inventory[invKey(pid, lid)] || 0; }
 function setCount(pid, lid, n) {
-  inventory[invKey(pid, lid)] = Math.max(0, n);
+  const count = Math.max(0, n);
+  inventory[invKey(pid, lid)] = count;
   save('inventory');
+  syncInventoryToSheet(pid, lid, count);
+}
+
+// ── GOOGLE SHEET SYNC ─────────────────────────────────────────────────────
+const SS_WORKER_BASE = 'https://barrel-co.brett-2f8.workers.dev';
+
+function syncInventoryToSheet(pid, lid, count) {
+  fetch(SS_WORKER_BASE + '/inventory', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ pid, lid, count, ts: new Date().toISOString(), venture: CURRENT_VENTURE }),
+  }).catch(function(e){ console.warn('Inventory sheet sync failed', e); });
+}
+
+function syncHistoryToSheet(entry) {
+  fetch(SS_WORKER_BASE + '/history', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(Object.assign({}, entry, { venture: CURRENT_VENTURE })),
+  }).catch(function(e){ console.warn('History sheet sync failed', e); });
+}
+
+// Pulls the Sheet's rows for the active venture into local state on load.
+// Local data wins on conflicts (most recent session); the Sheet only fills
+// in counts/history this device doesn't already have, so this is safe to
+// call every time StockShift boots or the venture switches.
+function ssSyncFromSheet() {
+  fetch(SS_WORKER_BASE + '/inventory').then(function(r){ return r.json(); }).then(function(data){
+    const rows = (data.values || []).slice(1);
+    let changed = false;
+    rows.forEach(function(r){
+      const pid = r[0], lid = r[1], count = parseInt(r[2]) || 0, venture = r[4] || 'barrelco';
+      if (venture !== CURRENT_VENTURE) return;
+      const k = invKey(pid, lid);
+      if (inventory[k] === undefined) { inventory[k] = count; changed = true; }
+    });
+    if (changed) { save('inventory'); renderInventory(); }
+  }).catch(function(){});
+
+  fetch(SS_WORKER_BASE + '/history').then(function(r){ return r.json(); }).then(function(data){
+    const rows = (data.values || []).slice(1);
+    const existingIds = new Set(history.map(function(h){ return h.id; }));
+    let changed = false;
+    rows.forEach(function(r){
+      const venture = r[13] || 'barrelco';
+      if (venture !== CURRENT_VENTURE) return;
+      const id = r[0];
+      if (existingIds.has(id)) return;
+      history.push({
+        id: r[0], ts: r[1], type: r[2], productId: r[3], productCode: r[4],
+        locationId: r[5], listingCode: r[6], locationName: r[7],
+        qty: parseInt(r[8]) || 0, newTotal: parseInt(r[9]) || 0,
+        salePrice: parseFloat(r[10]) || 0, revenue: parseFloat(r[11]) || 0,
+        note: r[12] || '',
+      });
+      changed = true;
+    });
+    if (changed) {
+      history.sort(function(a,b){ return new Date(b.ts) - new Date(a.ts); });
+      if (history.length > 500) history = history.slice(0, 500);
+      save('history');
+      renderHistory();
+    }
+  }).catch(function(){});
 }
 
 // Full listing code: BAL-OB2-NL1 format
