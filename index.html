@@ -2045,16 +2045,27 @@ var DEFAULT_LOCS=['Baltimore_N','Baltimore_S','Baltimore_E','Baltimore_W','Balti
   var mm=String(n.getMonth()+1).padStart(2,'0');
   var dd=String(n.getDate()).padStart(2,'0');
   document.getElementById('sDate').value=mm+dd+n.getFullYear();
-  var saved=localStorage.getItem('ps_locs');
-  var locs=saved?JSON.parse(saved):DEFAULT_LOCS;
-  locs.forEach(function(l){addLocToList(l,true);});
-  updPrev();
+  psLoadLocsForVenture();
 })();
 
 // ── LOCATIONS ──────────────────────────────────────────────────────────────
 function getLocs(){return Array.from(document.querySelectorAll('.li')).map(function(el){return{name:el.dataset.loc,chk:el.classList.contains('chk')};});}
 function getChkLocs(){return getLocs().filter(function(l){return l.chk;}).map(function(l){return l.name;});}
-function saveLocs(){localStorage.setItem('ps_locs',JSON.stringify(getLocs().map(function(l){return l.name;})));}
+function saveLocs(){localStorage.setItem('ps_locs_'+CURRENT_VENTURE,JSON.stringify(getLocs().map(function(l){return l.name;})));}
+function psLoadLocsForVenture(){
+  var ll=document.getElementById('ll');
+  if(ll) ll.innerHTML='';
+  var key='ps_locs_'+CURRENT_VENTURE;
+  var saved=localStorage.getItem(key);
+  if(!saved && CURRENT_VENTURE==='barrelco'){
+    var legacy=localStorage.getItem('ps_locs');
+    if(legacy){ saved=legacy; localStorage.setItem(key, legacy); }
+  }
+  var locs=saved?JSON.parse(saved):(CURRENT_VENTURE==='barrelco'?DEFAULT_LOCS:[]);
+  locs.forEach(function(l){addLocToList(l,true);});
+  updPrev();
+  if(typeof ssUpdBtn==='function') ssUpdBtn();
+}
 function addLocToList(name,chk){
   var list=document.getElementById('ll');
   var d=document.createElement('div');
