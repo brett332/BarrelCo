@@ -1518,8 +1518,9 @@ function shuffleArr(arr,seed){
 }
 
 // ── RENDER SIDEBAR ───────────────────────────────────────────────────────────
-(function(){
+function renderVentureUI(){
   var pl=document.getElementById('prodList');
+  pl.innerHTML='';
   PRODUCTS.forEach(function(p,i){
     var d=document.createElement('div');
     d.className='prod-card'+(i===0?' active':'');
