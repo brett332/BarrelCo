@@ -1631,30 +1631,205 @@ function getActiveProds(){
   });
 }
 function getActiveProd(){var p=getActiveProds();return p.length?p[0]:null;}
-function getChkLocs(){
+// ── PHOTO STATE (merged text+photo generation) ─────────────────────────────
+var lfPhotoMode='same';       // 'same' | 'perloc'
+var lfSameFiles=[];           // [{id,file,name,url}] — shared pool, one shifted copy goes to every checked location
+var lfPerLocFiles={};         // locId -> [{id,file,name,url}]
+var lfResults=[];             // [{prod,loc,sku,title,desc,group,photos:[{blob,ext}],folderName}]
+var lfRootDirHandle=null;     // cached folder handle for this browser session (one picker prompt per session)
+var lfClearFoldersFirst=true; // wipe each combo folder before writing new photos (repost cadence: stale photos don't pile up)
+
+function sanitizeFolderName(s){
+  return (s||'')
+    .replace(/[‐‑‒–—―]/g,' ')   // hyphen/dash variants -> space (Baltimore — West -> Baltimore West)
+    .replace(/[\/\\:*?"<>|]/g,'')       // strip characters invalid in folder names
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function lfSetPhotoMode(mode){
+  lfPhotoMode=mode;
+  var sameEl=document.getElementById('lfPhotoSame'), perLocEl=document.getElementById('lfPhotoPerLoc');
+  if(sameEl) sameEl.style.display=mode==='same'?'':'none';
+  if(perLocEl) perLocEl.style.display=mode==='perloc'?'':'none';
+  if(mode==='perloc') lfRefreshPerLocUploaders();
+}
+
+function lfHandleFiles(fl,locId){
+  var target=locId ? (lfPerLocFiles[locId]=lfPerLocFiles[locId]||[]) : lfSameFiles;
+  Array.from(fl).forEach(function(f){
+    if(!f.type.startsWith('image/')) return;
+    target.push({id:Math.random().toString(36).slice(2),file:f,name:f.name,url:URL.createObjectURL(f)});
+  });
+  if(locId) lfRenderPerLocShelf(locId); else lfRenderShelf();
+}
+
+function lfRenderShelf(){
+  var s=document.getElementById('lfShelf');
+  if(!s) return;
+  s.innerHTML='';
+  lfSameFiles.forEach(function(f){
+    var d=document.createElement('div');
+    d.className='pt';
+    d.innerHTML='<img src="'+f.url+'" alt=""><div style="flex:1;min-width:0"><div class="pt-name">'+escH(f.name)+'</div></div><span class="pt-del">✕</span>';
+    d.querySelector('.pt-del').addEventListener('click',function(e){
+      e.stopPropagation();
+      lfSameFiles=lfSameFiles.filter(function(x){return x.id!==f.id;});
+      lfRenderShelf();
+    });
+    s.appendChild(d);
+  });
+}
+
+function lfRefreshPerLocUploaders(){
+  var wrap=document.getElementById('lfPhotoPerLoc');
+  if(!wrap) return;
+  var locs=lfGetChkLocs();
+  wrap.innerHTML='';
+  if(!locs.length){
+    wrap.innerHTML='<div style="font-size:.63rem;color:var(--dim);">Check locations above first.</div>';
+    return;
+  }
+  locs.forEach(function(loc){
+    var box=document.createElement('div');
+    box.style.cssText='margin-bottom:10px;padding:8px;border:1px solid var(--border2);border-radius:8px;';
+    box.innerHTML='<div style="font-size:.63rem;color:var(--text2);margin-bottom:5px;">'+escH(loc.name)+'</div>'
+      +'<input type="file" id="lfFi-'+loc.id+'" accept="image/*" multiple style="font-size:.6rem;max-width:100%;">'
+      +'<div class="shelf" id="lfShelf-'+loc.id+'" style="margin-top:6px;"></div>';
+    wrap.appendChild(box);
+    document.getElementById('lfFi-'+loc.id).addEventListener('change',function(e){
+      lfHandleFiles(e.target.files,loc.id);
+      e.target.value='';
+    });
+    lfRenderPerLocShelf(loc.id);
+  });
+}
+
+function lfRenderPerLocShelf(locId){
+  var s=document.getElementById('lfShelf-'+locId);
+  if(!s) return;
+  var arr=lfPerLocFiles[locId]||[];
+  s.innerHTML='';
+  arr.forEach(function(f){
+    var d=document.createElement('div');
+    d.className='pt';
+    d.innerHTML='<img src="'+f.url+'" alt=""><div style="flex:1;min-width:0"><div class="pt-name">'+escH(f.name)+'</div></div><span class="pt-del">✕</span>';
+    d.querySelector('.pt-del').addEventListener('click',function(e){
+      e.stopPropagation();
+      lfPerLocFiles[locId]=(lfPerLocFiles[locId]||[]).filter(function(x){return x.id!==f.id;});
+      lfRenderPerLocShelf(locId);
+    });
+    s.appendChild(d);
+  });
+}
+
+(function(){
+  var lfUz=document.getElementById('lfUz');
+  if(!lfUz) return;
+  lfUz.addEventListener('click',function(e){if(e.target===lfUz||e.target.classList.contains('uz-txt')||e.target.classList.contains('uz-ico')){document.getElementById('lfFi').click();}});
+  lfUz.addEventListener('dragover',function(e){e.stopPropagation();e.preventDefault();lfUz.classList.add('dov');});
+  lfUz.addEventListener('dragleave',function(){lfUz.classList.remove('dov');});
+  lfUz.addEventListener('drop',function(e){e.stopPropagation();e.preventDefault();lfUz.classList.remove('dov');lfHandleFiles(e.dataTransfer.files,null);});
+})();
+
+// ── FOLDER SAVE (File System Access API — reuses PhotoShift's pattern) ─────
+async function lfGetRootDir(){
+  if(lfRootDirHandle) return lfRootDirHandle;
+  if(!window.showDirectoryPicker) return null;
+  try{ lfRootDirHandle=await window.showDirectoryPicker({mode:'readwrite'}); return lfRootDirHandle; }
+  catch(err){ return null; }
+}
+async function lfClearDir(dirHandle){
+  try{
+    var names=[];
+    for await (var entry of dirHandle.values()){ names.push(entry.name); }
+    for(var i=0;i<names.length;i++){ try{ await dirHandle.removeEntry(names[i]); }catch(e){} }
+  }catch(e){}
+}
+async function lfWriteCombo(root,combo){
+  if(!combo.photos||!combo.photos.length) return;
+  var dir=await root.getDirectoryHandle(combo.folderName,{create:true});
+  if(lfClearFoldersFirst) await lfClearDir(dir);
+  for(var i=0;i<combo.photos.length;i++){
+    var p=combo.photos[i];
+    var fh=await dir.getFileHandle(randName(p.ext),{create:true});
+    var wr=await fh.createWritable();
+    await wr.write(p.blob); await wr.close();
+  }
+}
+async function lfSaveCombo(combo,btnEl){
+  if(!combo.photos||!combo.photos.length) return;
+  if(btnEl){ btnEl.disabled=true; btnEl.textContent='Saving…'; }
+  var root=await lfGetRootDir();
+  if(!root){
+    for(var i=0;i<combo.photos.length;i++){ triggerDL(combo.photos[i].blob,randName(combo.photos[i].ext)); await sleep(150); }
+    if(btnEl){ btnEl.disabled=false; btnEl.textContent='📁 Save Photos'; }
+    return;
+  }
+  try{
+    await lfWriteCombo(root,combo);
+    if(btnEl){ btnEl.textContent='Saved ✓'; setTimeout(function(){btnEl.disabled=false;btnEl.textContent='📁 Save Photos';},2000); }
+  }catch(err){
+    logDebug('Save failed for '+combo.folderName+': '+err.message);
+    if(btnEl){ btnEl.disabled=false; btnEl.textContent='📁 Save Photos'; }
+  }
+}
+async function lfSaveAllPhotos(){
+  var withPhotos=lfResults.filter(function(r){return r.photos&&r.photos.length;});
+  if(!withPhotos.length) return;
+  var barBtn=document.getElementById('lfSaveAllBtn');
+  if(barBtn){ barBtn.disabled=true; barBtn.textContent='Saving…'; }
+  var root=await lfGetRootDir();
+  if(!root){
+    for(var i=0;i<withPhotos.length;i++){
+      var combo=withPhotos[i];
+      for(var j=0;j<combo.photos.length;j++){ triggerDL(combo.photos[j].blob,randName(combo.photos[j].ext)); await sleep(150); }
+    }
+    if(barBtn){ barBtn.disabled=false; barBtn.textContent='📁 Save All Photos to Folders'; }
+    return;
+  }
+  try{
+    for(var k=0;k<withPhotos.length;k++){ await lfWriteCombo(root,withPhotos[k]); }
+    if(barBtn){ barBtn.textContent='Saved ✓ '+withPhotos.length+' folders'; setTimeout(function(){barBtn.disabled=false;barBtn.textContent='📁 Save All Photos to Folders';},2500); }
+  }catch(err){
+    logDebug('Save-all failed: '+err.message);
+    if(barBtn){ barBtn.disabled=false; barBtn.textContent='📁 Save All Photos to Folders'; }
+  }
+}
+function lfShowSaveAllBar(){
+  var ra=document.getElementById('ra');
+  if(document.getElementById('lfSaveAllBar')) return;
+  var bar=document.createElement('div');
+  bar.id='lfSaveAllBar';
+  bar.style.cssText='display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap;';
+  bar.innerHTML='<button class="sfb" id="lfSaveAllBtn" onclick="lfSaveAllPhotos()">📁 Save All Photos to Folders</button>'
+    +'<label style="font-size:.6rem;color:var(--dim);display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" id="lfClearFirst" checked onchange="lfClearFoldersFirst=this.checked"> clear old photos in each folder first</label>';
+  ra.insertBefore(bar,ra.firstChild);
+}
+
+// ── GENERATE (text + photos together, one batch per product × location) ───
+function lfGetChkLocs(){
   return Array.from(document.querySelectorAll('.loc-item.chk')).map(function(el){
     return LOCATIONS.find(function(l){return l.id===el.dataset.id;});
   });
 }
 function updBtn(){
   var btn=document.getElementById('genBtn');
-  btn.disabled=!(getActiveProds().length>0&&getChkLocs().length>0);
+  btn.disabled=!(getActiveProds().length>0&&lfGetChkLocs().length>0);
   if(!btn.disabled) btn.textContent='Generate Listings →';
+  if(lfPhotoMode==='perloc') lfRefreshPerLocUploaders();
 }
-
-// ── GENERATE ─────────────────────────────────────────────────────────────────
-async function generate(){
-  var prods=getActiveProds(), locs=getChkLocs();
+async function lfGenerate(){
+  var prods=getActiveProds(), locs=lfGetChkLocs();
   if(!prods.length||!locs.length) return;
-  var prod=prods[0]; // used below; multi-product handled by outer loop
   var btn=document.getElementById('genBtn');
   btn.disabled=true; btn.textContent='Generating…';
   var oNote=document.getElementById('oNote').value.trim();
-  var panel=document.getElementById('panel');
   var ra=document.getElementById('ra');
   ra.innerHTML='';
   document.getElementById('emptyState').style.display='none';
   usedDimIdx={};
+  lfResults=[];
 
   if(locs.length>=4){
     var w=document.createElement('div');
@@ -1664,7 +1839,6 @@ async function generate(){
   }
 
   var allLocNames=locs.map(function(l){return l.name;}).join(', ');
-  // Build job list: every product × every location
   var jobs=[];
   prods.forEach(function(p){locs.forEach(function(l){jobs.push({prod:p,loc:l});});});
 
@@ -1677,22 +1851,32 @@ async function generate(){
     return card;
   });
 
-  (async function(){
-    for(var idx=0;idx<jobs.length;idx++){
-      var job=jobs[idx];
-      try{
-        var result=await generateOne(job.prod,job.loc,oNote,idx,allLocNames,locs);
-        var newCard=buildCard(result);
-        ra.replaceChild(newCard,cards[idx]);
-      }catch(err){
-        logDebug('Failed: '+job.prod.code+' / '+job.loc.name+' — '+err.message);
-        cards[idx].innerHTML='<div style="color:var(--red);font-size:.73rem;padding:4px;">Failed for '+job.prod.code+' / '+job.loc.name+': '+err.message+'</div>';
+  for(var idx=0;idx<jobs.length;idx++){
+    var job=jobs[idx];
+    try{
+      var text=await generateOne(job.prod,job.loc,oNote,idx,allLocNames,locs);
+      var srcFiles=lfPhotoMode==='same' ? lfSameFiles : (lfPerLocFiles[job.loc.id]||[]);
+      var photos=[];
+      for(var pi=0;pi<srcFiles.length;pi++){
+        try{ photos.push(await shiftImage(srcFiles[pi].file)); }
+        catch(pe){ logDebug('Photo shift failed for '+job.loc.name+': '+pe.message); }
       }
-      if(idx<jobs.length-1) await new Promise(function(r){setTimeout(r,1100);});
+      var combo={
+        prod:job.prod, loc:job.loc, sku:text.sku, title:text.title, desc:text.desc, group:text.group,
+        photos:photos, folderName:sanitizeFolderName(job.prod.name+' '+job.loc.name)
+      };
+      lfResults.push(combo);
+      var newCard=buildCard(combo);
+      ra.replaceChild(newCard,cards[idx]);
+    }catch(err){
+      logDebug('Failed: '+job.prod.code+' / '+job.loc.name+' — '+err.message);
+      cards[idx].innerHTML='<div style="color:var(--red);font-size:.73rem;padding:4px;">Failed for '+job.prod.code+' / '+job.loc.name+': '+err.message+'</div>';
     }
-    btn.disabled=false;
-    btn.textContent='Generate Listings →';
-  })();
+    if(idx<jobs.length-1) await new Promise(function(r){setTimeout(r,1100);});
+  }
+  btn.disabled=false;
+  btn.textContent='Generate Listings →';
+  if(lfResults.some(function(r){return r.photos.length;})) lfShowSaveAllBar();
 }
 
 async function generateOne(prod,loc,oNote,idx,allLocNames,allLocs){
