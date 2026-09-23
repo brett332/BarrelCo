@@ -2143,7 +2143,7 @@ function renderDebugLog(){
 }
 
 // init active tab
-(function(){document.getElementById('tabListings').classList.add('active');})();
+(function(){var t=document.getElementById('tabListings');if(t)t.classList.add('active');})();
 
 function escH(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 </script>
