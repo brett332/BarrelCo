@@ -1118,12 +1118,29 @@ body { margin:0; }
     </div>
     <div id="locList"></div>
   </div>
+  <div class="ss" id="lfPhotoSection">
+    <div class="slbl">Photos <span style="font-size:.57rem;color:var(--dim);">optional — skip for text-only</span></div>
+    <div style="display:flex;gap:14px;margin-bottom:8px;font-size:.68rem;color:var(--text2);flex-wrap:wrap;">
+      <label style="display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="radio" name="lfPhotoMode" value="same" checked onchange="lfSetPhotoMode('same')"> Same photos, all locations</label>
+      <label style="display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="radio" name="lfPhotoMode" value="perloc" onchange="lfSetPhotoMode('perloc')"> Different per location</label>
+    </div>
+    <div id="lfPhotoSame">
+      <div class="uz" id="lfUz">
+        <input type="file" id="lfFi" accept="image/*" multiple onchange="lfHandleFiles(this.files,null);this.value=''">
+        <div class="uz-ico">📁</div>
+        <div class="uz-txt"><strong>Drop photos or click to browse</strong>JPG PNG WEBP</div>
+      </div>
+      <div class="shelf" id="lfShelf" style="margin-top:8px;"></div>
+    </div>
+    <div id="lfPhotoPerLoc" style="display:none;"></div>
+    <div style="font-size:.58rem;color:var(--dim);margin-top:6px;">Each checked location gets its own freshly-shifted copy of every uploaded photo. Shift intensity/transforms use the PhotoShift tab's current settings.</div>
+  </div>
   <div class="ss">
     <div class="slbl">Session Note for AI (optional)</div>
     <div class="field"><textarea id="oNote" rows="2" placeholder="e.g. mention fire pit season, note stock is limited…"></textarea></div>
   </div>
   <div class="ss">
-    <button class="gen-btn" id="genBtn" disabled onclick="generate()">Generate Listings →</button>
+    <button class="gen-btn" id="genBtn" disabled onclick="lfGenerate()">Generate Listings →</button>
   </div>
 </div>
 <div class="panel" id="panel">
