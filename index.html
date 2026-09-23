@@ -1970,20 +1970,31 @@ function buildCard(r){
   card.className='listing-card';
   var tl=r.title.length;
   var tc=tl<=70?'ok':tl<=80?'warn':'over';
+  var key=r.loc.id+'-'+r.prod.id; // unique per product×location combo (not just location — multi-product batches share locations)
+  var photoHtml='';
+  if(r.photos&&r.photos.length){
+    photoHtml='<div class="lf"><div class="lf-lbl">Photos ('+r.photos.length+') <button class="save-photos-btn copy-btn">📁 Save Photos</button></div>'
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">'
+      +r.photos.map(function(p){return '<img src="'+URL.createObjectURL(p.blob)+'" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--border2);">';}).join('')
+      +'</div><div style="font-size:.6rem;color:var(--dim);margin-top:4px;">→ '+escH(r.folderName)+'</div></div>';
+  }
   card.innerHTML='<div class="listing-hdr">'
     +'<span class="listing-loc">'+r.loc.name+'</span>'
     +'<span class="listing-sku">'+r.sku+'</span>'
     +'<div class="listing-hsp"></div>'
     +'</div>'
     +'<div class="listing-body">'
-    +'<div class="lf"><div class="lf-lbl">Title <span class="cc '+tc+'">'+tl+' chars</span><button class="copy-btn" data-copy="title-'+r.loc.id+'">Copy</button></div>'
-    +'<div class="lf-content title-box" id="title-'+r.loc.id+'">'+escH(r.title)+'</div></div>'
-    +'<div class="lf"><div class="lf-lbl">Description <button class="copy-btn" data-copy="desc-'+r.loc.id+'">Copy</button></div>'
-    +'<div class="lf-content" id="desc-'+r.loc.id+'">'+escH(r.desc)+'</div></div>'
-    +(r.group?'<div class="gpc"><div class="gpl">Group Post <button class="copy-btn" data-copy="gp-'+r.loc.id+'">Copy</button></div>'
-    +'<div class="gp-content" id="gp-'+r.loc.id+'">'+escH(r.group)+'</div></div>':'')
+    +'<div class="lf"><div class="lf-lbl">Title <span class="cc '+tc+'">'+tl+' chars</span><button class="copy-btn" data-copy="title-'+key+'">Copy</button></div>'
+    +'<div class="lf-content title-box" id="title-'+key+'">'+escH(r.title)+'</div></div>'
+    +'<div class="lf"><div class="lf-lbl">Description <button class="copy-btn" data-copy="desc-'+key+'">Copy</button></div>'
+    +'<div class="lf-content" id="desc-'+key+'">'+escH(r.desc)+'</div></div>'
+    +(r.group?'<div class="gpc"><div class="gpl">Group Post <button class="copy-btn" data-copy="gp-'+key+'">Copy</button></div>'
+    +'<div class="gp-content" id="gp-'+key+'">'+escH(r.group)+'</div></div>':'')
+    +photoHtml
     +'</div>';
   card.addEventListener('click',function(e){
+    var saveBtn=e.target.closest('.save-photos-btn');
+    if(saveBtn){ lfSaveCombo(r,saveBtn); return; }
     var btn=e.target.closest('.copy-btn');
     if(!btn)return;
     var id=btn.dataset.copy;
