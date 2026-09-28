@@ -197,6 +197,18 @@ header{background:var(--surf);border-bottom:1px solid var(--bdr);padding:0 24px;
   .vcn{color:var(--muted);font-size:.56rem;}
   .dlb{padding:3px 7px;background:transparent;border:1px solid var(--bdr);border-radius:4px;color:var(--muted);font-family:'DM Mono',monospace;font-size:.56rem;cursor:pointer;transition:all .15s;}
   .dlb:hover{border-color:var(--grn);color:var(--grn);}
+  /* PhotoShift per-product (ps2-) */
+  .ps2-chips{display:flex;flex-wrap:wrap;gap:5px;}
+  .ps2-chip{display:flex;align-items:center;gap:6px;padding:5px 9px;border:1px solid var(--bdr);border-radius:14px;background:var(--surf);font-size:.64rem;cursor:pointer;user-select:none;transition:all .12s;}
+  .ps2-chip:hover{border-color:var(--acc);}
+  .ps2-chip.sel{border-color:var(--acc);background:rgba(232,197,71,.1);color:var(--acc);}
+  .ps2-chk{width:10px;font-size:.6rem;}
+  .ps2-cx{color:var(--muted);padding:0 2px;}.ps2-cx:hover{color:var(--red);}
+  .ps2-hint{font-size:.62rem;color:var(--muted);padding:4px 0;}
+  .ps2-box{border:1px solid var(--bdr);border-radius:8px;padding:9px;margin-bottom:9px;background:rgba(255,255,255,.015);display:flex;flex-direction:column;gap:6px;}
+  .ps2-box .slbl{margin-bottom:0;}
+  .ps2-vid{width:100%;aspect-ratio:1;object-fit:contain;background:#000;display:block;}
+  .ps2-err{padding:10px;font-size:.58rem;color:var(--red);line-height:1.5;word-break:break-word;aspect-ratio:1;overflow:auto;}
   ::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px;}
 .app-nav-btn{display:inline-flex;align-items:center;background:transparent;border:1px solid var(--bdr,#2a2a30);border-radius:4px;color:var(--muted,#666);font-size:.58rem;padding:3px 9px;cursor:pointer;text-decoration:none;transition:all .15s;font-family:inherit;letter-spacing:.03em;}
 .app-nav-btn:hover{border-color:var(--acc,#e8c547);color:var(--acc,#e8c547);}
@@ -1087,6 +1099,55 @@ body { margin:0; }
 .bc-app.active { display:block; min-height:calc(100vh - 46px); }
 #bc-stockshift.active { display:flex; flex-direction:column; min-height:calc(100vh - 46px); }
 #bc-listingforge.active .layout { min-height:calc(100vh - 46px - 49px); }
+
+/* ── UNIFIED SETUP (one setup node shared by ListingForge + PhotoShift) ── */
+#shSetup{display:flex;flex-direction:column;gap:12px;}
+.sh-photos-only .sh-textonly{display:none !important;}
+.sh-sw{display:flex;flex-direction:column;gap:6px;}
+.sh-swl{display:flex;align-items:center;gap:8px;font-size:.72rem;cursor:pointer;min-height:30px;}
+.sh-swl input{width:18px;height:18px;accent-color:var(--acc);}
+.sh-hint{font-size:.6rem;color:var(--dim);margin-top:6px;line-height:1.5;}
+.sh-locwrap{display:flex;flex-direction:column;gap:3px;}
+.sh-lname{flex:1;min-width:0;}
+.sh-lsku{font-size:.55rem;color:var(--dim);font-family:'IBM Plex Mono',monospace;}
+.sh-ledit{font-size:.65rem;color:var(--dim);padding:4px 8px;border:1px solid var(--bdr);border-radius:3px;}
+.sh-ledit:hover{color:var(--acc);border-color:var(--acc);}
+.sh-badge{font-size:.5rem;color:var(--muted);border:1px solid var(--bdr);border-radius:8px;padding:1px 6px;white-space:nowrap;}
+.sh-note{font-size:.62rem;color:var(--muted);background:rgba(232,197,71,.07);border-radius:5px;padding:7px 9px;line-height:1.5;}
+.sh-note.err{color:var(--red);background:rgba(224,92,92,.08);}
+.sh-bar,.sh-imp,.sh-restools{display:flex;flex-wrap:wrap;gap:5px;align-items:center;}
+.sh-bar button,.sh-imp button,.sh-restools button{padding:6px 11px;min-height:34px;border:1px solid var(--bdr);border-radius:5px;background:transparent;color:var(--muted);font-family:inherit;font-size:.62rem;cursor:pointer;}
+.sh-bar button:hover,.sh-imp button:hover,.sh-restools button:hover{border-color:var(--acc);color:var(--acc);}
+.sh-imp button.act{border-color:var(--acc);background:rgba(232,197,71,.12);color:var(--acc);}
+.sh-barl{font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);}
+.sh-tag{font-size:.52rem;font-weight:700;padding:2px 7px;border-radius:9px;flex-shrink:0;letter-spacing:.03em;}
+.sh-t-mine{background:#2e7d4f;color:#fff;}
+.sh-t-idea{background:#d99a1e;color:#111;}
+.sh-t-none{background:#3a3a44;color:#b0b0bb;}
+.pt.tsel{border-color:var(--blue);background:rgba(74,144,217,.14);}
+.pt.skip{opacity:.5;}
+.sh-tile .pt-del{position:static;transform:none;display:block;padding:6px 8px;}
+.sh-use{font-size:.75rem;padding:6px 8px;border:1px solid var(--bdr);border-radius:4px;color:var(--grn);flex-shrink:0;}
+.shelf{max-height:260px;}
+.sh-det{border:1px solid var(--bdr);border-radius:7px;padding:8px 10px;background:var(--surf);}
+.sh-det summary{cursor:pointer;font-size:.68rem;color:var(--acc);min-height:28px;display:flex;align-items:center;}
+.sh-ovbody{display:flex;flex-direction:column;gap:9px;margin-top:9px;}
+.sh-ovh{font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--acc);margin-top:4px;}
+.sh-prevrow{display:flex;gap:8px;flex-wrap:wrap;}
+.sh-prevrow canvas{width:140px;height:auto;border:1px solid var(--bdr);border-radius:4px;display:block;}
+.sh-prevrow div{font-size:.55rem;color:var(--muted);text-align:center;}
+.sh-ovbody input[type=color]{width:44px;height:30px;padding:0;border:1px solid var(--bdr);background:transparent;}
+.sh-ovbody select{background:var(--bg);color:var(--txt);border:1px solid var(--bdr);border-radius:5px;padding:6px;font-size:.66rem;}
+.sh-resbar{display:flex;flex-direction:column;gap:9px;padding:11px;border:1px solid var(--bdr);border-radius:8px;background:var(--surf);}
+.sh-rstat{font-size:.62rem;color:var(--acc);min-height:1em;}
+.vc{position:relative;}
+.sh-rtile.rsel{outline:2px solid var(--blue);outline-offset:-2px;}
+.sh-rtile.busy{opacity:.6;}
+.sh-rtop{position:absolute;top:5px;left:5px;right:5px;display:flex;justify-content:space-between;align-items:center;z-index:2;pointer-events:none;}
+.sh-rsel{pointer-events:auto;width:28px;height:28px;border-radius:5px;border:2px solid #fff;background:rgba(0,0,0,.55);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.85rem;cursor:pointer;}
+.sh-rtile.rsel .sh-rsel{background:var(--blue);}
+.sh-clr{display:flex;align-items:center;gap:6px;font-size:.6rem;color:var(--muted);cursor:pointer;}
+@media(hover:none){.pt-del{display:block;}}
 </style>
 </head>
 <body>
@@ -1108,39 +1169,21 @@ body { margin:0; }
 <div class="layout">
 <div class="sb">
   <div class="ss">
-    <div class="slbl">Products <span style="font-size:.57rem;color:var(--dim);">select one or more</span></div>
-    <div id="prodList"></div>
-  </div>
-  <div class="ss">
-    <div class="slbl">
-      Locations
-      <span style="font-size:.57rem;color:var(--dim);">click ✎ to edit settings</span>
+    <div class="slbl">Generate <span style="font-size:.57rem;color:var(--dim);">pick what you get</span></div>
+    <div class="sh-sw">
+      <label class="sh-swl"><input type="checkbox" id="swText" checked onchange="shUpdButtons()"> Text — title, description, group post</label>
+      <label class="sh-swl"><input type="checkbox" id="swPhotos" checked onchange="shUpdButtons()"> Photos / videos — shifted, per product</label>
     </div>
-    <div id="locList"></div>
+    <div class="sh-hint">Products, locations, uploads, tags and overlay settings below are the very same ones the PhotoShift tab uses. Text only leaves your photos alone; Photos only never calls the AI.</div>
   </div>
-  <div class="ss" id="lfPhotoSection">
-    <div class="slbl">Photos <span style="font-size:.57rem;color:var(--dim);">optional — skip for text-only</span></div>
-    <div style="display:flex;gap:14px;margin-bottom:8px;font-size:.68rem;color:var(--text2);flex-wrap:wrap;">
-      <label style="display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="radio" name="lfPhotoMode" value="same" checked onchange="lfSetPhotoMode('same')"> Same photos, all locations</label>
-      <label style="display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="radio" name="lfPhotoMode" value="perloc" onchange="lfSetPhotoMode('perloc')"> Different per location</label>
-    </div>
-    <div id="lfPhotoSame">
-      <div class="uz" id="lfUz">
-        <input type="file" id="lfFi" accept="image/*" multiple onchange="lfHandleFiles(this.files,null);this.value=''">
-        <div class="uz-ico">📁</div>
-        <div class="uz-txt"><strong>Drop photos or click to browse</strong>JPG PNG WEBP</div>
-      </div>
-      <div class="shelf" id="lfShelf" style="margin-top:8px;"></div>
-    </div>
-    <div id="lfPhotoPerLoc" style="display:none;"></div>
-    <div style="font-size:.58rem;color:var(--dim);margin-top:6px;">Each checked location gets its own freshly-shifted copy of every uploaded photo. Shift intensity/transforms use the PhotoShift tab's current settings.</div>
-  </div>
+  <div class="ss" id="lfSetupSlot"></div>
   <div class="ss">
     <div class="slbl">Session Note for AI (optional)</div>
     <div class="field"><textarea id="oNote" rows="2" placeholder="e.g. mention fire pit season, note stock is limited…"></textarea></div>
   </div>
   <div class="ss">
     <button class="gen-btn" id="genBtn" disabled onclick="lfGenerate()">Generate Listings →</button>
+    <div class="sh-hint" id="lfHint"></div>
   </div>
 </div>
 <div class="panel" id="panel">
@@ -1148,6 +1191,7 @@ body { margin:0; }
     <div class="empty-ico">📋</div>
     <div class="empty-txt">Select a product and locations, then hit <strong style="color:var(--acc)">Generate Listings</strong>.<br><br>Each location gets a completely unique title, description, and group post — plus a freshly-shifted copy of any photos you upload, one combo per product × location, ready to save into its own named folder. Edit per-location settings by clicking ✎ next to any location.</div>
   </div>
+  <div class="pw" id="lfPw"><div class="pl" id="lfPl">Processing...</div><div class="pt2"><div class="pf" id="lfPf"></div></div></div>
   <div id="ra"></div>
 </div>
 </div>
@@ -1477,7 +1521,6 @@ function switchVenture(ventureId){
   LOCATIONS = VENTURES[CURRENT_VENTURE].locations;
   DEFAULT_LOC_SETTINGS = VENTURES[CURRENT_VENTURE].locSettings;
   usedDimIdx = {};
-  renderVentureUI();
   renderVentureSwitcher();
   var empty=document.getElementById('emptyState');
   if(empty) empty.style.display='';
@@ -1485,7 +1528,7 @@ function switchVenture(ventureId){
   if(ra) ra.innerHTML='';
   var btn=document.getElementById('genBtn');
   if(btn){ btn.disabled=true; btn.textContent='Generate Listings →'; }
-  if(typeof psLoadLocsForVenture==='function') psLoadLocsForVenture();
+  if(typeof shLoadVenture==='function') shLoadVenture();
   if(typeof ssApplyVenture==='function') ssApplyVenture();
 }
 
@@ -1537,107 +1580,8 @@ function shuffleArr(arr,seed){
   return a;
 }
 
-// ── RENDER SIDEBAR ───────────────────────────────────────────────────────────
-function renderVentureUI(){
-  var pl=document.getElementById('prodList');
-  pl.innerHTML='';
-  PRODUCTS.forEach(function(p,i){
-    var d=document.createElement('div');
-    d.className='prod-card'+(i===0?' active':'');
-    d.dataset.id=p.id;
-    d.innerHTML='<div class="prod-name">'+p.name+'</div>'
-      +'<div style="display:flex;gap:8px;margin-top:3px;">'
-      +'<span class="prod-code">'+p.code+'</span>'
-      +'<span class="prod-price">'+(p.priceEach||'price TBD')+'</span>'
-      +'</div>';
-    d.addEventListener('click',function(){
-      d.classList.toggle('active');
-      updateLocSKUs();
-      updBtn();
-    });
-    pl.appendChild(d);
-  });
-
-  var ll=document.getElementById('locList');
-  ll.innerHTML='';
-  LOCATIONS.forEach(function(loc){
-    var settings=getLocSettings(loc.id);
-    var wrap=document.createElement('div');
-    wrap.className='loc-item';
-    wrap.dataset.id=loc.id;
-
-    var hdr=document.createElement('div');
-    hdr.className='loc-header';
-    hdr.innerHTML='<div class="lck"></div>'
-      +'<span class="loc-name">'+loc.name+'</span>'
-      +'<span class="loc-sku" id="lsku-'+loc.id+'">--</span>'
-      +'<button class="loc-edit-btn" data-loc="'+loc.id+'">✎</button>';
-
-    // Toggle check on header click (not edit button)
-    hdr.addEventListener('click',function(e){
-      if(e.target.classList.contains('loc-edit-btn')) return;
-      wrap.classList.toggle('chk');
-      hdr.querySelector('.lck').textContent=wrap.classList.contains('chk')?'✓':'';
-      updBtn();
-    });
-
-    // Editor panel
-    var editor=document.createElement('div');
-    editor.className='loc-editor';
-    editor.id='editor-'+loc.id;
-    editor.innerHTML='<div class="le-field"><label>Pickup location text</label>'
-      +'<textarea id="le-pickup-'+loc.id+'" rows="2">'+escH(settings.pickup||'')+'</textarea></div>'
-      +'<div class="le-field"><label>Delivery note (leave blank to omit)</label>'
-      +'<input type="text" id="le-delivery-'+loc.id+'" value="'+escH(settings.delivery||'')+'"></div>'
-      +'<button class="le-save" data-loc="'+loc.id+'">Save</button>';
-
-    // Edit button toggle
-    hdr.querySelector('.loc-edit-btn').addEventListener('click',function(e){
-      e.stopPropagation();
-      editor.classList.toggle('open');
-    });
-
-    // Save button
-    editor.querySelector('.le-save').addEventListener('click',function(){
-      var s={
-        pickup: document.getElementById('le-pickup-'+loc.id).value.trim(),
-        delivery: document.getElementById('le-delivery-'+loc.id).value.trim(),
-        includeDelivery: !!document.getElementById('le-delivery-'+loc.id).value.trim()
-      };
-      saveLocSettings(loc.id, s);
-      editor.classList.remove('open');
-    });
-
-    wrap.appendChild(hdr);
-    wrap.appendChild(editor);
-    ll.appendChild(wrap);
-  });
-
-  updateLocSKUs();
-}
-renderVentureUI();
+// ── SETUP UI (products / locations / uploads / overlays) lives in the shared setup script near the end of this file ──
 renderVentureSwitcher();
-
-function updateLocSKUs(){
-  var prod=getActiveProd();
-  LOCATIONS.forEach(function(loc){
-    var el=document.getElementById('lsku-'+loc.id);
-    if(el) el.textContent=prod?buildSKU(prod,loc):'--';
-  });
-}
-function getActiveProds(){
-  return Array.from(document.querySelectorAll('.prod-card.active')).map(function(el){
-    return PRODUCTS.find(function(p){return p.id===el.dataset.id;});
-  });
-}
-function getActiveProd(){var p=getActiveProds();return p.length?p[0]:null;}
-// ── PHOTO STATE (merged text+photo generation) ─────────────────────────────
-var lfPhotoMode='same';       // 'same' | 'perloc'
-var lfSameFiles=[];           // [{id,file,name,url}] — shared pool, one shifted copy goes to every checked location
-var lfPerLocFiles={};         // locId -> [{id,file,name,url}]
-var lfResults=[];             // [{prod,loc,sku,title,desc,group,photos:[{blob,ext}],folderName}]
-var lfRootDirHandle=null;     // cached folder handle for this browser session (one picker prompt per session)
-var lfClearFoldersFirst=true; // wipe each combo folder before writing new photos (repost cadence: stale photos don't pile up)
 
 function sanitizeFolderName(s){
   return (s||'')
@@ -1647,237 +1591,9 @@ function sanitizeFolderName(s){
     .trim();
 }
 
-function lfSetPhotoMode(mode){
-  lfPhotoMode=mode;
-  var sameEl=document.getElementById('lfPhotoSame'), perLocEl=document.getElementById('lfPhotoPerLoc');
-  if(sameEl) sameEl.style.display=mode==='same'?'':'none';
-  if(perLocEl) perLocEl.style.display=mode==='perloc'?'':'none';
-  if(mode==='perloc') lfRefreshPerLocUploaders();
-}
-
-function lfHandleFiles(fl,locId){
-  var target=locId ? (lfPerLocFiles[locId]=lfPerLocFiles[locId]||[]) : lfSameFiles;
-  Array.from(fl).forEach(function(f){
-    if(!f.type.startsWith('image/')) return;
-    target.push({id:Math.random().toString(36).slice(2),file:f,name:f.name,url:URL.createObjectURL(f)});
-  });
-  if(locId) lfRenderPerLocShelf(locId); else lfRenderShelf();
-}
-
-function lfRenderShelf(){
-  var s=document.getElementById('lfShelf');
-  if(!s) return;
-  s.innerHTML='';
-  lfSameFiles.forEach(function(f){
-    var d=document.createElement('div');
-    d.className='pt';
-    d.innerHTML='<img src="'+f.url+'" alt=""><div style="flex:1;min-width:0"><div class="pt-name">'+escH(f.name)+'</div></div><span class="pt-del">✕</span>';
-    d.querySelector('.pt-del').addEventListener('click',function(e){
-      e.stopPropagation();
-      lfSameFiles=lfSameFiles.filter(function(x){return x.id!==f.id;});
-      lfRenderShelf();
-    });
-    s.appendChild(d);
-  });
-}
-
-function lfRefreshPerLocUploaders(){
-  var wrap=document.getElementById('lfPhotoPerLoc');
-  if(!wrap) return;
-  var locs=lfGetChkLocs();
-  wrap.innerHTML='';
-  if(!locs.length){
-    wrap.innerHTML='<div style="font-size:.63rem;color:var(--dim);">Check locations above first.</div>';
-    return;
-  }
-  locs.forEach(function(loc){
-    var box=document.createElement('div');
-    box.style.cssText='margin-bottom:10px;padding:8px;border:1px solid var(--border2);border-radius:8px;';
-    box.innerHTML='<div style="font-size:.63rem;color:var(--text2);margin-bottom:5px;">'+escH(loc.name)+'</div>'
-      +'<input type="file" id="lfFi-'+loc.id+'" accept="image/*" multiple style="font-size:.6rem;max-width:100%;">'
-      +'<div class="shelf" id="lfShelf-'+loc.id+'" style="margin-top:6px;"></div>';
-    wrap.appendChild(box);
-    document.getElementById('lfFi-'+loc.id).addEventListener('change',function(e){
-      lfHandleFiles(e.target.files,loc.id);
-      e.target.value='';
-    });
-    lfRenderPerLocShelf(loc.id);
-  });
-}
-
-function lfRenderPerLocShelf(locId){
-  var s=document.getElementById('lfShelf-'+locId);
-  if(!s) return;
-  var arr=lfPerLocFiles[locId]||[];
-  s.innerHTML='';
-  arr.forEach(function(f){
-    var d=document.createElement('div');
-    d.className='pt';
-    d.innerHTML='<img src="'+f.url+'" alt=""><div style="flex:1;min-width:0"><div class="pt-name">'+escH(f.name)+'</div></div><span class="pt-del">✕</span>';
-    d.querySelector('.pt-del').addEventListener('click',function(e){
-      e.stopPropagation();
-      lfPerLocFiles[locId]=(lfPerLocFiles[locId]||[]).filter(function(x){return x.id!==f.id;});
-      lfRenderPerLocShelf(locId);
-    });
-    s.appendChild(d);
-  });
-}
-
-(function(){
-  var lfUz=document.getElementById('lfUz');
-  if(!lfUz) return;
-  lfUz.addEventListener('click',function(e){if(e.target===lfUz||e.target.classList.contains('uz-txt')||e.target.classList.contains('uz-ico')){document.getElementById('lfFi').click();}});
-  lfUz.addEventListener('dragover',function(e){e.stopPropagation();e.preventDefault();lfUz.classList.add('dov');});
-  lfUz.addEventListener('dragleave',function(){lfUz.classList.remove('dov');});
-  lfUz.addEventListener('drop',function(e){e.stopPropagation();e.preventDefault();lfUz.classList.remove('dov');lfHandleFiles(e.dataTransfer.files,null);});
-})();
-
-// ── FOLDER SAVE (File System Access API — reuses PhotoShift's pattern) ─────
-async function lfGetRootDir(){
-  if(lfRootDirHandle) return lfRootDirHandle;
-  if(!window.showDirectoryPicker) return null;
-  try{ lfRootDirHandle=await window.showDirectoryPicker({mode:'readwrite'}); return lfRootDirHandle; }
-  catch(err){ return null; }
-}
-async function lfClearDir(dirHandle){
-  try{
-    var names=[];
-    for await (var entry of dirHandle.values()){ names.push(entry.name); }
-    for(var i=0;i<names.length;i++){ try{ await dirHandle.removeEntry(names[i]); }catch(e){} }
-  }catch(e){}
-}
-async function lfWriteCombo(root,combo){
-  if(!combo.photos||!combo.photos.length) return;
-  var dir=await root.getDirectoryHandle(combo.folderName,{create:true});
-  if(lfClearFoldersFirst) await lfClearDir(dir);
-  for(var i=0;i<combo.photos.length;i++){
-    var p=combo.photos[i];
-    var fh=await dir.getFileHandle(randName(p.ext),{create:true});
-    var wr=await fh.createWritable();
-    await wr.write(p.blob); await wr.close();
-  }
-}
-async function lfSaveCombo(combo,btnEl){
-  if(!combo.photos||!combo.photos.length) return;
-  if(btnEl){ btnEl.disabled=true; btnEl.textContent='Saving…'; }
-  var root=await lfGetRootDir();
-  if(!root){
-    for(var i=0;i<combo.photos.length;i++){ triggerDL(combo.photos[i].blob,randName(combo.photos[i].ext)); await sleep(150); }
-    if(btnEl){ btnEl.disabled=false; btnEl.textContent='📁 Save Photos'; }
-    return;
-  }
-  try{
-    await lfWriteCombo(root,combo);
-    if(btnEl){ btnEl.textContent='Saved ✓'; setTimeout(function(){btnEl.disabled=false;btnEl.textContent='📁 Save Photos';},2000); }
-  }catch(err){
-    logDebug('Save failed for '+combo.folderName+': '+err.message);
-    if(btnEl){ btnEl.disabled=false; btnEl.textContent='📁 Save Photos'; }
-  }
-}
-async function lfSaveAllPhotos(){
-  var withPhotos=lfResults.filter(function(r){return r.photos&&r.photos.length;});
-  if(!withPhotos.length) return;
-  var barBtn=document.getElementById('lfSaveAllBtn');
-  if(barBtn){ barBtn.disabled=true; barBtn.textContent='Saving…'; }
-  var root=await lfGetRootDir();
-  if(!root){
-    for(var i=0;i<withPhotos.length;i++){
-      var combo=withPhotos[i];
-      for(var j=0;j<combo.photos.length;j++){ triggerDL(combo.photos[j].blob,randName(combo.photos[j].ext)); await sleep(150); }
-    }
-    if(barBtn){ barBtn.disabled=false; barBtn.textContent='📁 Save All Photos to Folders'; }
-    return;
-  }
-  try{
-    for(var k=0;k<withPhotos.length;k++){ await lfWriteCombo(root,withPhotos[k]); }
-    if(barBtn){ barBtn.textContent='Saved ✓ '+withPhotos.length+' folders'; setTimeout(function(){barBtn.disabled=false;barBtn.textContent='📁 Save All Photos to Folders';},2500); }
-  }catch(err){
-    logDebug('Save-all failed: '+err.message);
-    if(barBtn){ barBtn.disabled=false; barBtn.textContent='📁 Save All Photos to Folders'; }
-  }
-}
-function lfShowSaveAllBar(){
-  var ra=document.getElementById('ra');
-  if(document.getElementById('lfSaveAllBar')) return;
-  var bar=document.createElement('div');
-  bar.id='lfSaveAllBar';
-  bar.style.cssText='display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap;';
-  bar.innerHTML='<button class="sfb" id="lfSaveAllBtn" onclick="lfSaveAllPhotos()">📁 Save All Photos to Folders</button>'
-    +'<label style="font-size:.6rem;color:var(--dim);display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" id="lfClearFirst" checked onchange="lfClearFoldersFirst=this.checked"> clear old photos in each folder first</label>';
-  ra.insertBefore(bar,ra.firstChild);
-}
-
-// ── GENERATE (text + photos together, one batch per product × location) ───
-function lfGetChkLocs(){
-  return Array.from(document.querySelectorAll('.loc-item.chk')).map(function(el){
-    return LOCATIONS.find(function(l){return l.id===el.dataset.id;});
-  });
-}
-function updBtn(){
-  var btn=document.getElementById('genBtn');
-  btn.disabled=!(getActiveProds().length>0&&lfGetChkLocs().length>0);
-  if(!btn.disabled) btn.textContent='Generate Listings →';
-  if(lfPhotoMode==='perloc') lfRefreshPerLocUploaders();
-}
-async function lfGenerate(){
-  var prods=getActiveProds(), locs=lfGetChkLocs();
-  if(!prods.length||!locs.length) return;
-  var btn=document.getElementById('genBtn');
-  btn.disabled=true; btn.textContent='Generating…';
-  var oNote=document.getElementById('oNote').value.trim();
-  var ra=document.getElementById('ra');
-  ra.innerHTML='';
-  document.getElementById('emptyState').style.display='none';
-  usedDimIdx={};
-  lfResults=[];
-
-  if(locs.length>=4){
-    var w=document.createElement('div');
-    w.className='timing-note';
-    w.innerHTML='<strong>⚠ Posting Reminder</strong>Never post all locations same day — FB flags it. Stagger across 2 days minimum. Baltimore Wednesday, Waynesboro/Winchester Thursday.';
-    ra.appendChild(w);
-  }
-
-  var allLocNames=locs.map(function(l){return l.name;}).join(', ');
-  var jobs=[];
-  prods.forEach(function(p){locs.forEach(function(l){jobs.push({prod:p,loc:l});});});
-
-  var cards=jobs.map(function(job,i){
-    var card=document.createElement('div');
-    card.className='loading-card';
-    var label=job.prod.code+' — '+job.loc.name;
-    card.innerHTML='<div class="spinner"></div><div class="loading-txt">'+(i===0?'Generating '+label+'…':'Queued: '+label+'…')+'</div>';
-    ra.appendChild(card);
-    return card;
-  });
-
-  for(var idx=0;idx<jobs.length;idx++){
-    var job=jobs[idx];
-    try{
-      var text=await generateOne(job.prod,job.loc,oNote,idx,allLocNames,locs);
-      var srcFiles=lfPhotoMode==='same' ? lfSameFiles : (lfPerLocFiles[job.loc.id]||[]);
-      var photos=[];
-      for(var pi=0;pi<srcFiles.length;pi++){
-        try{ photos.push(await shiftImage(srcFiles[pi].file)); }
-        catch(pe){ logDebug('Photo shift failed for '+job.loc.name+': '+pe.message); }
-      }
-      var combo={
-        prod:job.prod, loc:job.loc, sku:text.sku, title:text.title, desc:text.desc, group:text.group,
-        photos:photos, folderName:sanitizeFolderName(job.prod.name+' '+job.loc.name)
-      };
-      lfResults.push(combo);
-      var newCard=buildCard(combo);
-      ra.replaceChild(newCard,cards[idx]);
-    }catch(err){
-      logDebug('Failed: '+job.prod.code+' / '+job.loc.name+' — '+err.message);
-      cards[idx].innerHTML='<div style="color:var(--red);font-size:.73rem;padding:4px;">Failed for '+job.prod.code+' / '+job.loc.name+': '+err.message+'</div>';
-    }
-    if(idx<jobs.length-1) await new Promise(function(r){setTimeout(r,1100);});
-  }
-  btn.disabled=false;
-  btn.textContent='Generate Listings →';
-  if(lfResults.some(function(r){return r.photos.length;})) lfShowSaveAllBar();
-}
+// ── GENERATE: one engine for both tabs — see shRun() in the shared setup script near the end of this file ──
+function lfGenerate(){ return shRun('lf'); }
+function updBtn(){ if(typeof shUpdButtons==='function') shUpdButtons(); }
 
 async function generateOne(prod,loc,oNote,idx,allLocNames,allLocs){
   var dimString=getUniqueDim(prod);
@@ -1964,49 +1680,7 @@ async function generateOne(prod,loc,oNote,idx,allLocNames,allLocs){
   return {prod:prod,loc:loc,sku:sku,title:title,desc:desc,group:group};
 }
 
-// ── BUILD CARD ───────────────────────────────────────────────────────────────
-function buildCard(r){
-  var card=document.createElement('div');
-  card.className='listing-card';
-  var tl=r.title.length;
-  var tc=tl<=70?'ok':tl<=80?'warn':'over';
-  var key=r.loc.id+'-'+r.prod.id; // unique per product×location combo (not just location — multi-product batches share locations)
-  var photoHtml='';
-  if(r.photos&&r.photos.length){
-    photoHtml='<div class="lf"><div class="lf-lbl">Photos ('+r.photos.length+') <button class="save-photos-btn copy-btn">📁 Save Photos</button></div>'
-      +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">'
-      +r.photos.map(function(p){return '<img src="'+URL.createObjectURL(p.blob)+'" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--border2);">';}).join('')
-      +'</div><div style="font-size:.6rem;color:var(--dim);margin-top:4px;">→ '+escH(r.folderName)+'</div></div>';
-  }
-  card.innerHTML='<div class="listing-hdr">'
-    +'<span class="listing-loc">'+r.loc.name+'</span>'
-    +'<span class="listing-sku">'+r.sku+'</span>'
-    +'<div class="listing-hsp"></div>'
-    +'</div>'
-    +'<div class="listing-body">'
-    +'<div class="lf"><div class="lf-lbl">Title <span class="cc '+tc+'">'+tl+' chars</span><button class="copy-btn" data-copy="title-'+key+'">Copy</button></div>'
-    +'<div class="lf-content title-box" id="title-'+key+'">'+escH(r.title)+'</div></div>'
-    +'<div class="lf"><div class="lf-lbl">Description <button class="copy-btn" data-copy="desc-'+key+'">Copy</button></div>'
-    +'<div class="lf-content" id="desc-'+key+'">'+escH(r.desc)+'</div></div>'
-    +(r.group?'<div class="gpc"><div class="gpl">Group Post <button class="copy-btn" data-copy="gp-'+key+'">Copy</button></div>'
-    +'<div class="gp-content" id="gp-'+key+'">'+escH(r.group)+'</div></div>':'')
-    +photoHtml
-    +'</div>';
-  card.addEventListener('click',function(e){
-    var saveBtn=e.target.closest('.save-photos-btn');
-    if(saveBtn){ lfSaveCombo(r,saveBtn); return; }
-    var btn=e.target.closest('.copy-btn');
-    if(!btn)return;
-    var id=btn.dataset.copy;
-    var el=document.getElementById(id);
-    if(!el)return;
-    navigator.clipboard.writeText(el.innerText).then(function(){
-      btn.textContent='Copied ✓';btn.classList.add('copied');
-      setTimeout(function(){btn.textContent='Copy';btn.classList.remove('copied');},2000);
-    });
-  });
-  return card;
-}
+// ── LISTING CARD: buildCard() lives in the shared setup script near the end of this file ──
 
 
 // ── BARREL TOOLS: WISHLIST + DEBUG ────────────────────────────────────────
@@ -2161,21 +1835,29 @@ document.addEventListener('drop',function(e){e.preventDefault();});
 
 <div class="main">
 <div class="sb">
+<div id="psSetupSlot"><div id="shSetup">
 
-  <!-- Upload -->
+  <!-- Products (per-product upload boxes) -->
   <div>
-    <div class="slbl">Upload Photos / Videos</div>
-    <div class="uz" id="uz">
-      <input type="file" id="fi" accept="image/*,video/*" multiple onchange="handleFiles(this.files);this.value=''">
-      <div class="uz-ico">📁</div>
-      <div class="uz-txt"><strong>Drop files or click to browse</strong>JPG PNG WEBP MP4 MOV</div>
+    <div class="slbl">Products — pick one or more</div>
+    <div class="ps2-chips" id="psProds"></div>
+    <div class="alr">
+      <input type="text" class="ali" id="psCustomProd" placeholder="Custom product name…" onkeydown="if(event.key==='Enter')psAddCustomProd()">
+      <button class="alb" onclick="psAddCustomProd()">+ Add</button>
     </div>
   </div>
 
-  <!-- Shelf -->
+  <!-- One upload box + shelf per selected product (built by psRenderBoxes) -->
   <div>
-    <div class="slbl">Files (<span id="fc">0</span>) — click to toggle</div>
-    <div class="shelf" id="shelf"></div>
+    <div class="slbl">Upload Photos / Videos — one box per product</div>
+    <div class="sh-imp" id="shImp">
+      <span class="sh-barl">Tag new uploads as</span>
+      <button type="button" class="sh-imp-b act" data-imp="none">None</button>
+      <button type="button" class="sh-imp-b" data-imp="mine">Mine</button>
+      <button type="button" class="sh-imp-b" data-imp="idea">Idea</button>
+    </div>
+    <div class="sh-hint" style="margin:4px 0 8px;">Mine = gets your watermark · Idea = gets the project-idea banner · None = untouched. Everything you drop in next gets this tag; change any of them later with the boxes' Tag selected buttons.</div>
+    <div id="psBoxes"></div>
   </div>
 
   <!-- Transforms -->
@@ -2217,31 +1899,67 @@ document.addEventListener('drop',function(e){e.preventDefault();});
     <div class="slbl">Session & Folder</div>
     <div class="sp">
       <div class="srow">
-        <div class="sf"><label>Date</label><input type="text" class="si" id="sDate" oninput="updPrev()"></div>
-        <div class="sf"><label>Product</label><input type="text" class="si" id="sProd" placeholder="Planters" oninput="updPrev()"></div>
+        <div class="sf"><label>Date (added to file names)</label><input type="text" class="si" id="sDate" oninput="updPrev()"></div>
       </div>
-      <div class="fprev" id="fprev">05202026_Planters / Baltimore_N / img_xxxxx.jpg</div>
+      <div class="fprev" id="fprev">Barrels Baltimore N / 05202026_img_xxxxx.jpg</div>
     </div>
   </div>
 
-  <!-- Locations -->
+  <!-- Locations (built-in ListingForge locations + your custom photo-only ones) -->
   <div>
-    <div class="slbl">Locations</div>
-    <div class="ll" id="ll"></div>
+    <div class="slbl"><span>Locations</span><span class="sh-textonly" style="text-transform:none;letter-spacing:0;">✎ edits pickup / delivery text</span></div>
+    <div id="shMig"></div>
+    <div class="ll" id="ll" style="max-height:280px;"></div>
     <div class="alr">
-      <input type="text" class="ali" id="ali" placeholder="Add location…" onkeydown="if(event.key==='Enter')addLoc()">
+      <input type="text" class="ali" id="ali" placeholder="Add custom location (photos only)…" onkeydown="if(event.key==='Enter')addLoc()">
       <button class="alb" onclick="addLoc()">+ Add</button>
     </div>
   </div>
 
-  <button class="gb" id="ps-gb" disabled onclick="generate()">Generate →</button>
+  <!-- Overlays: watermark (Mine) + idea banner (Idea) -->
+  <div id="shOv">
+    <div class="slbl">Watermark &amp; idea banner</div>
+    <details class="sh-det" id="shOvDet">
+      <summary>Overlay settings (saved on this device)</summary>
+      <div class="sh-ovbody">
+        <div class="sh-ovh">Watermark — photos/videos tagged Mine</div>
+        <div class="cr"><span class="cl">Type</span>
+          <div class="vbs"><button type="button" class="vb" id="ovTypeText" onclick="shOvSetType('text')">Text</button><button type="button" class="vb" id="ovTypeLogo" onclick="shOvSetType('logo')">Logo image</button></div>
+        </div>
+        <div class="sf"><label>Watermark text</label><input type="text" class="si" id="ovText" oninput="shOvIn()"></div>
+        <div class="cr"><span class="cl">Text size (% of image)</span><div class="sw"><input type="range" id="ovTextSize" min="2" max="20" oninput="shOvIn()"><span class="sv" id="ovTextSizeV"></span></div></div>
+        <div class="cr"><span class="cl">Text color</span><input type="color" id="ovColor" oninput="shOvIn()"></div>
+        <div class="sf"><label>Logo image (upload once)</label>
+          <input type="file" id="ovLogoFile" accept="image/*" onchange="shOvLogoPick(this)">
+          <div style="display:flex;gap:8px;align-items:center;margin-top:5px;"><button type="button" class="alb" onclick="shOvLogoClear()">Remove logo</button><span class="sh-hint" id="ovLogoState" style="margin:0;"></span></div>
+        </div>
+        <div class="cr"><span class="cl">Logo size (% of width)</span><div class="sw"><input type="range" id="ovLogoSize" min="5" max="60" oninput="shOvIn()"><span class="sv" id="ovLogoSizeV"></span></div></div>
+        <div class="cr"><span class="cl">Opacity</span><div class="sw"><input type="range" id="ovOpacity" min="10" max="100" oninput="shOvIn()"><span class="sv" id="ovOpacityV"></span></div></div>
+        <div class="cr"><span class="cl">Position</span>
+          <select id="ovPos" onchange="shOvIn()">
+            <option value="br">Bottom right</option><option value="bl">Bottom left</option><option value="tr">Top right</option><option value="tl">Top left</option><option value="c">Center</option><option value="tile">Tiled</option>
+          </select>
+        </div>
+        <div class="sh-ovh">Idea banner — photos/videos tagged Idea</div>
+        <div class="sf"><label>Banner wording</label><input type="text" class="si" id="ovBannerText" oninput="shOvIn()"></div>
+        <div class="cr"><span class="cl">Banner color</span><input type="color" id="ovBannerBg" oninput="shOvIn()"></div>
+        <div class="sh-prevrow">
+          <div><canvas id="ovPrevMine" width="300" height="190"></canvas>Mine preview</div>
+          <div><canvas id="ovPrevIdea" width="300" height="190"></canvas>Idea preview</div>
+        </div>
+      </div>
+    </details>
+  </div>
+</div></div>
+
+  <button class="gb" id="ps-gb" disabled onclick="generate()">Generate photos →</button>
 </div>
 
 <!-- Panel -->
 <div class="panel" id="ps-panel">
   <div class="es" id="ps-es">
     <div class="ei">🖼</div>
-    <div class="et">Upload files, select locations, hit <strong style="color:var(--acc)">Generate</strong>.<br><br>One click saves everything into organized folders:<br>Date_Product / Location / files</div>
+    <div class="et">Upload files, select locations, hit <strong style="color:var(--acc)">Generate</strong>.<br><br>Pick products, drop each product's files in its own box, choose locations.<br>Saves into one folder per combo:<br>Product Location / files</div>
   </div>
   <div class="pw" id="ps-pw"><div class="pl" id="ps-pl">Processing...</div><div class="pt2"><div class="pf" id="ps-pf"></div></div></div>
   <div id="ps-ra"></div>
@@ -2251,6 +1969,9 @@ document.addEventListener('drop',function(e){e.preventDefault();});
 <script>
 // ── STATE ──────────────────────────────────────────────────────────────────
 var files=[], selIds=new Set(), varCount=1, results=[];
+// PhotoShift per-product state (declared up here because the init IIFE below runs before later code)
+var psSel=[], psFiles={}, psCustom=[], psUrls=[], psBusy=false;
+var PS_MAX_CLIP_SEC=1800, PS_WARN_CLIP_SEC=120, PS_WARN_CLIP_MB=250;
 var DEFAULT_LOCS=['Baltimore_N','Baltimore_S','Baltimore_E','Baltimore_W','Baltimore_Laurel','Winchester','Waynesboro','Rural'];
 
 // ── INIT ───────────────────────────────────────────────────────────────────
@@ -2259,87 +1980,185 @@ var DEFAULT_LOCS=['Baltimore_N','Baltimore_S','Baltimore_E','Baltimore_W','Balti
   var mm=String(n.getMonth()+1).padStart(2,'0');
   var dd=String(n.getDate()).padStart(2,'0');
   document.getElementById('sDate').value=mm+dd+n.getFullYear();
-  psLoadLocsForVenture();
 })();
+// Locations are now shared with ListingForge (shAllLocs / shRenderLocs / addLoc in the shared setup script).
 
-// ── LOCATIONS ──────────────────────────────────────────────────────────────
-function getLocs(){return Array.from(document.querySelectorAll('.li')).map(function(el){return{name:el.dataset.loc,chk:el.classList.contains('chk')};});}
-function getChkLocs(){return getLocs().filter(function(l){return l.chk;}).map(function(l){return l.name;});}
-function saveLocs(){localStorage.setItem('ps_locs_'+CURRENT_VENTURE,JSON.stringify(getLocs().map(function(l){return l.name;})));}
-function psLoadLocsForVenture(){
-  var ll=document.getElementById('ll');
-  if(ll) ll.innerHTML='';
-  var key='ps_locs_'+CURRENT_VENTURE;
-  var saved=localStorage.getItem(key);
-  if(!saved && CURRENT_VENTURE==='barrelco'){
-    var legacy=localStorage.getItem('ps_locs');
-    if(legacy){ saved=legacy; localStorage.setItem(key, legacy); }
-  }
-  var locs=saved?JSON.parse(saved):(CURRENT_VENTURE==='barrelco'?DEFAULT_LOCS:[]);
-  locs.forEach(function(l){addLocToList(l,true);});
-  updPrev();
-  if(typeof ssUpdBtn==='function') ssUpdBtn();
-}
-function addLocToList(name,chk){
-  var list=document.getElementById('ll');
-  var d=document.createElement('div');
-  d.className='li'+(chk?' chk':''); d.dataset.loc=name;
-  d.innerHTML='<div class="lck">'+(chk?'✓':'')+'</div><span>'+name+'</span><span class="ldel">✕</span>';
-  d.querySelector('.ldel').addEventListener('click',function(e){e.stopPropagation();d.remove();saveLocs();ssUpdBtn();});
-  d.addEventListener('click',function(e){
-    if(e.target.classList.contains('ldel'))return;
-    d.classList.toggle('chk');
-    d.querySelector('.lck').textContent=d.classList.contains('chk')?'✓':'';
-    saveLocs();ssUpdBtn();updPrev();
-  });
-  list.appendChild(d);
-}
-function addLoc(){
-  var inp=document.getElementById('ali');
-  var val=inp.value.trim().replace(/\s+/g,'_');
-  if(!val)return;
-  addLocToList(val,true);saveLocs();inp.value='';ssUpdBtn();
-}
-function updPrev(){
-  var date=document.getElementById('sDate').value||'DATE';
-  var prod=document.getElementById('sProd').value||'Product';
-  var locs=getChkLocs();
-  var loc=locs.length?locs[0]:'Location';
-  document.getElementById('fprev').textContent=date+'_'+prod+' / '+loc+' / img_xxxxx.jpg';
-}
+// ── PHOTOSHIFT: PRODUCTS + PER-PRODUCT UPLOAD BOXES ────────────────────────
+// State: psSel = ordered keys of selected products; psFiles[key] = files dropped in THAT product's box only.
 
-// ── UPLOAD ─────────────────────────────────────────────────────────────────
-var uz=document.getElementById('uz');
-uz.addEventListener('click',function(e){if(e.target===uz||e.target.classList.contains('uz-txt')||e.target.classList.contains('uz-ico')){document.getElementById('fi').click();}});
-uz.addEventListener('dragover',function(e){e.stopPropagation();e.preventDefault();uz.classList.add('dov');});
-uz.addEventListener('dragleave',function(){uz.classList.remove('dov');});
-uz.addEventListener('drop',function(e){e.stopPropagation();e.preventDefault();uz.classList.remove('dov');handleFiles(e.dataTransfer.files);});
-
-function handleFiles(fl){
-  Array.from(fl).forEach(function(f){
-    if(!f.type.startsWith('image/')&&!f.type.startsWith('video/'))return;
-    var id=Math.random().toString(36).slice(2);
-    files.push({id:id,file:f,name:f.name,url:URL.createObjectURL(f),isVid:f.type.startsWith('video/')});
-    selIds.add(id);
-  });
-  renderShelf();ssUpdBtn();
+function psEsc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function psSlug(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');}
+function psProdList(){
+  var list=(PRODUCTS||[]).map(function(p){return {key:CURRENT_VENTURE+':'+p.id,name:p.name,code:p.code||'',custom:false,prod:p};});
+  psCustom.forEach(function(n){list.push({key:CURRENT_VENTURE+':c:'+psSlug(n),name:n,code:'',custom:true,prod:null});});
+  return list;
 }
-function renderShelf(){
-  var s=document.getElementById('shelf');
-  document.getElementById('fc').textContent=files.length;
-  s.innerHTML='';
-  files.forEach(function(f){
+function psProdByKey(k){return psProdList().filter(function(p){return p.key===k;})[0]||null;}
+function psLoadProductsForVenture(){
+  psSel=[];
+  try{psCustom=JSON.parse(localStorage.getItem('ps_prods_custom_'+CURRENT_VENTURE)||'[]');}catch(e){psCustom=[];}
+  if(!Array.isArray(psCustom))psCustom=[];
+  var firstP=psProdList()[0];
+  psSel=firstP?[firstP.key]:[];
+  psRenderProducts();
+}
+function psSaveCustom(){try{localStorage.setItem('ps_prods_custom_'+CURRENT_VENTURE,JSON.stringify(psCustom));}catch(e){}}
+function psAddCustomProd(){
+  var inp=document.getElementById('psCustomProd');
+  var name=(inp.value||'').replace(/\s+/g,' ').trim();
+  if(!name)return;
+  var key=CURRENT_VENTURE+':c:'+psSlug(name);
+  if(!psSlug(name))return;
+  if(!psProdByKey(key)){psCustom.push(name);psSaveCustom();}
+  if(psSel.indexOf(key)<0)psSel.push(key);
+  inp.value='';
+  psRenderProducts();
+}
+function psRemoveCustomProd(key){
+  var p=psProdByKey(key);if(!p)return;
+  psCustom=psCustom.filter(function(n){return CURRENT_VENTURE+':c:'+psSlug(n)!==key;});
+  psSaveCustom();
+  (psFiles[key]||[]).forEach(function(f){selIds.delete(f.id);});
+  delete psFiles[key];
+  psSel=psSel.filter(function(k){return k!==key;});
+  psRenderProducts();
+}
+function psToggleProd(key){
+  var i=psSel.indexOf(key);
+  if(i>=0)psSel.splice(i,1);else psSel.push(key);
+  psRenderProducts();
+}
+function psRenderProducts(){
+  var box=document.getElementById('psProds');
+  if(!box)return;
+  var list=psProdList();
+  psSel=psSel.filter(function(k){return list.some(function(p){return p.key===k;});});
+  box.innerHTML='';
+  if(!list.length){box.innerHTML='<div class="ps2-hint">No saved products for this venture — add a custom name below.</div>';}
+  list.forEach(function(p){
     var d=document.createElement('div');
-    d.className='pt'+(selIds.has(f.id)?' sel':'');
-    if(f.isVid){d.innerHTML='<div class="vt">🎬</div><div style="flex:1;min-width:0"><div class="pt-name">'+f.name+'</div><div class="pt-meta">video</div></div><span class="pt-del">✕</span>';}
-    else{d.innerHTML='<img src="'+f.url+'" alt=""><div style="flex:1;min-width:0"><div class="pt-name">'+f.name+'</div><div class="pt-meta">photo</div></div><span class="pt-del">✕</span>';}
-    d.querySelector('.pt-del').addEventListener('click',function(e){e.stopPropagation();files=files.filter(function(x){return x.id!==f.id;});selIds.delete(f.id);renderShelf();ssUpdBtn();});
-    d.addEventListener('click',function(e){if(e.target.classList.contains('pt-del'))return;selIds.has(f.id)?selIds.delete(f.id):selIds.add(f.id);d.classList.toggle('sel');ssUpdBtn();});
+    d.className='ps2-chip'+(psSel.indexOf(p.key)>=0?' sel':'');
+    d.dataset.pk=p.key;
+    d.innerHTML='<span class="ps2-chk">'+(psSel.indexOf(p.key)>=0?'✓':'')+'</span><span class="ps2-cn">'+psEsc(p.name)+'</span>'+(p.custom?'<span class="ps2-cx" title="Remove custom product">✕</span>':'');
+    d.addEventListener('click',function(e){
+      if(e.target.classList.contains('ps2-cx')){e.stopPropagation();psRemoveCustomProd(p.key);return;}
+      psToggleProd(p.key);
+    });
+    box.appendChild(d);
+  });
+  psRenderBoxes();if(typeof shRenderLocs==='function')shRenderLocs();ssUpdBtn();updPrev();
+}
+function psRenderBoxes(){
+  var host=document.getElementById('psBoxes');
+  if(!host)return;
+  host.innerHTML='';
+  if(!psSel.length){host.innerHTML='<div class="ps2-hint">Select a product above to get its upload box.</div>';return;}
+  psSel.forEach(function(key){
+    var p=psProdByKey(key);if(!p)return;
+    var box=document.createElement('div');
+    box.className='ps2-box';box.dataset.pk=key;
+    box.innerHTML='<div class="slbl"><span>'+psEsc(p.name)+'</span><span>Files (<span class="ps2-fc">0</span>)</span></div>'+
+      '<div class="uz"><input type="file" class="ps2-fi" accept="image/*,video/*" multiple>'+
+      '<div class="uz-ico">📁</div><div class="uz-txt"><strong>Drop '+psEsc(p.name)+' files or click</strong>JPG PNG WEBP MP4 MOV</div></div>'+
+      '<div class="sh-bar"></div><div class="shelf ps2-shelf"></div>';
+    var uzEl=box.querySelector('.uz'), fi=box.querySelector('.ps2-fi');
+    fi.addEventListener('change',function(){handleFiles(fi.files,key);fi.value='';});
+    uzEl.addEventListener('click',function(e){if(e.target===uzEl||e.target.classList.contains('uz-txt')||e.target.classList.contains('uz-ico')||e.target.tagName==='STRONG'){fi.click();}});
+    uzEl.addEventListener('dragover',function(e){e.stopPropagation();e.preventDefault();uzEl.classList.add('dov');});
+    uzEl.addEventListener('dragleave',function(){uzEl.classList.remove('dov');});
+    uzEl.addEventListener('drop',function(e){e.stopPropagation();e.preventDefault();uzEl.classList.remove('dov');handleFiles(e.dataTransfer.files,key);});
+    host.appendChild(box);
+    renderShelf(key);
+  });
+}
+function psFmtDur(s){if(!isFinite(s))return '?';s=Math.round(s);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
+function handleFiles(fl,key){
+  if(!key||!psProdByKey(key))return;
+  if(!psFiles[key])psFiles[key]=[];
+  Array.from(fl).forEach(function(f){
+    var isVid=f.type.startsWith('video/'), isImg=f.type.startsWith('image/');
+    if(!isVid&&!isImg)return;
+    var rec={id:Math.random().toString(36).slice(2),file:f,name:f.name,url:URL.createObjectURL(f),isVid:isVid,dur:NaN,pk:key,tag:shImportTag||'none'};
+    psFiles[key].push(rec);
+    selIds.add(rec.id);
+    if(isVid){
+      var pv=document.createElement('video');pv.preload='metadata';
+      pv.onloadedmetadata=function(){rec.dur=pv.duration;pv.removeAttribute('src');renderShelf(key);};
+      pv.onerror=function(){rec.dur=NaN;};
+      pv.src=rec.url;
+    }
+  });
+  renderShelf(key);ssUpdBtn();
+}
+function renderShelf(key){
+  var box=document.querySelector('.ps2-box[data-pk="'+key+'"]');
+  if(!box)return;
+  var list=psFiles[key]||[];
+  box.querySelector('.ps2-fc').textContent=list.length;
+  var bar=box.querySelector('.sh-bar');
+  if(bar){
+    var nSel=list.filter(function(f){return shTagSel.has(f.id);}).length;
+    bar.style.display=list.length?'':'none';
+    bar.innerHTML='<span class="sh-barl">Select</span><button type="button" data-act="all">All</button><button type="button" data-act="clear">Clear</button>'
+      +'<span class="sh-barl">Tag selected ('+nSel+')</span>'
+      +'<button type="button" data-act="tag" data-tag="mine">Mine</button><button type="button" data-act="tag" data-tag="idea">Idea</button><button type="button" data-act="tag" data-tag="none">None</button>';
+    bar.onclick=function(e){
+      var b=e.target.closest('button');if(!b)return;
+      var cur=psFiles[key]||[],act=b.dataset.act;
+      if(act==='all')cur.forEach(function(f){shTagSel.add(f.id);});
+      else if(act==='clear')cur.forEach(function(f){shTagSel.delete(f.id);});
+      else if(act==='tag')cur.forEach(function(f){if(shTagSel.has(f.id))f.tag=b.dataset.tag;});
+      renderShelf(key);
+    };
+  }
+  var s=box.querySelector('.ps2-shelf');
+  s.innerHTML='';
+  list.forEach(function(f){
+    var d=document.createElement('div');
+    var tg=f.tag||'none';
+    d.className='pt sh-tile'+(shTagSel.has(f.id)?' tsel':'')+(selIds.has(f.id)?'':' skip');
+    d.dataset.id=f.id;
+    var meta='photo';
+    if(f.isVid){
+      var mb=f.file.size/1048576;
+      meta='video '+psFmtDur(f.dur)+' · '+mb.toFixed(1)+'MB';
+      if(f.dur>PS_WARN_CLIP_SEC||mb>PS_WARN_CLIP_MB)meta+=' ⚠ long/large — slow to re-encode';
+    }
+    d.innerHTML=(f.isVid?'<div class="vt">🎬</div>':'<img src="'+f.url+'" alt="">')+'<div style="flex:1;min-width:0"><div class="pt-name">'+psEsc(f.name)+'</div><div class="pt-meta">'+psEsc(meta)+'</div></div>'
+      +'<span class="sh-tag sh-t-'+tg+'">'+SH_TAGNAME[tg]+'</span>'
+      +'<span class="sh-use" title="Include in the run (tap to skip this file)">'+(selIds.has(f.id)?'✓':'○')+'</span><span class="pt-del">✕</span>';
+    d.querySelector('.pt-del').addEventListener('click',function(e){
+      e.stopPropagation();
+      psFiles[key]=psFiles[key].filter(function(x){return x.id!==f.id;});
+      selIds.delete(f.id);shTagSel.delete(f.id);delete psImgOk[f.id];
+      try{URL.revokeObjectURL(f.url);}catch(er){}
+      renderShelf(key);ssUpdBtn();
+    });
+    d.querySelector('.sh-use').addEventListener('click',function(e){
+      e.stopPropagation();
+      if(selIds.has(f.id))selIds.delete(f.id);else selIds.add(f.id);
+      renderShelf(key);ssUpdBtn();
+    });
+    d.addEventListener('click',function(e){
+      if(e.target.closest('.pt-del')||e.target.closest('.sh-use'))return;
+      if(shTagSel.has(f.id))shTagSel.delete(f.id);else shTagSel.add(f.id);
+      renderShelf(key);
+    });
     s.appendChild(d);
   });
 }
-function ssUpdBtn(){document.getElementById('ps-gb').disabled=!(selIds.size>0&&getChkLocs().length>0);}
+function psSelectedFor(key){return (psFiles[key]||[]).filter(function(f){return selIds.has(f.id);});}
+function ssUpdBtn(){ if(typeof shUpdButtons==='function') shUpdButtons(); }
 function setVar(n,btn){varCount=n;document.querySelectorAll('.vb').forEach(function(b){b.classList.remove('act');});btn.classList.add('act');}
+// Folder name for one product x location combo — same helper/style as ListingForge ("Barrels Baltimore N")
+function psFolderName(prodName,locName){return sanitizeFolderName(prodName+' '+String(locName).replace(/_/g,' '));}
+function updPrev(){
+  var date=(document.getElementById('sDate').value||'DATE');
+  var p=psSel.length?psProdByKey(psSel[0]):null;
+  var locs=shChkLocs();
+  var el=document.getElementById('fprev');
+  if(el)el.textContent=psFolderName(p?p.name:'Product',locs.length?locs[0].name:'Location')+' / '+date+'_img_xxxxx.jpg';
+}
 
 // ── EXIF ───────────────────────────────────────────────────────────────────
 function getExif(file){
@@ -2430,106 +2249,182 @@ function randName(ext){
   return 'img_'+a+b+c+'.'+(ext||'jpg');
 }
 
+// ── VIDEO RE-ENCODE (client-side: <video> -> canvas -> MediaRecorder) ───────
+// Every output is a genuine re-encode with its own random flip / micro-rotation / zoom / colour shift.
+// Runs in REAL TIME (a 30s clip takes ~30s) and the tab must stay open and visible.
+function psPickVideoMime(){
+  if(typeof MediaRecorder==='undefined'||!MediaRecorder.isTypeSupported)return null;
+  var c=['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4;codecs=avc1,mp4a.40.2','video/mp4;codecs=avc1','video/mp4',
+         'video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
+  for(var i=0;i<c.length;i++){
+    var ok=false;try{ok=MediaRecorder.isTypeSupported(c[i]);}catch(e){}
+    if(ok)return {mime:c[i],ext:c[i].indexOf('video/mp4')===0?'mp4':'webm'};
+  }
+  return null;
+}
+// Same variation formulas/floors as shiftImage (kept separate so shiftImage stays untouched for ListingForge)
+function psVariation(){
+  var g=function(id){return document.getElementById(id).checked;};
+  var intensity=parseInt(document.getElementById('intensity').value)/100;
+  var dir=Math.random()>0.5?1:-1;
+  return {
+    flip:g('tFlip')?(Math.random()>0.5?-1:1):1,
+    angle:(g('tRotate')?(0.4+Math.random()*2.5*intensity):(0.4+Math.random()*0.4))*dir,
+    zoom:g('tCrop')?(1+0.02+Math.random()*0.08*intensity*2):(1+0.01+Math.random()*0.01),
+    bright:g('tBright')?(0.88+Math.random()*0.24*intensity*2):(1+(Math.random()>0.5?0.02:-0.02)+Math.random()*0.01),
+    contrast:g('tContrast')?(0.9+Math.random()*0.2*intensity*2):(1+(Math.random()>0.5?0.015:-0.015)),
+    sat:g('tSat')?(0.85+Math.random()*0.3*intensity*2):(1+(Math.random()>0.5?0.02:-0.02))
+  };
+}
+// psShiftVideo = random shift; if a tag is given the overlay (watermark / idea banner) is recorded as a SECOND parallel output,
+// so the clean shifted clip is kept for later re-tagging. shOverlayVideo = overlay-only pass over a stored shifted clip (identity transform).
+// Resolves {blob,ovBlob,ext,dur,warn} or rejects with Error. Shift mode: blob = clean shifted, ovBlob = with overlay (or null).
+// Overlay-only mode: blob = with overlay. onProg(fraction,durationSec) is called during playback.
+function psShiftVideo(file,onProg,tag){return shVideoCore(file,{onProg:onProg,tag:tag,ident:false});}
+function shOverlayVideo(blob,tag,durHint,onProg){return shVideoCore(blob,{onProg:onProg,tag:tag,ident:true,durHint:durHint});}
+function shVideoCore(file,cfg){
+  var onProg=cfg.onProg, tagOv=(cfg.tag&&cfg.tag!=='none')?cfg.tag:null;
+  return shEnsureLogo().then(function(){return new Promise(function(resolve,reject){
+    var pick=psPickVideoMime();
+    if(!pick)return reject(new Error('This browser cannot re-encode video (MediaRecorder unavailable)'));
+    var url=URL.createObjectURL(file), v=document.createElement('video');
+    var settled=false, rec=null, rec2=null, actx=null, timer=null, stopped=false, chunks=[], chunks2=[], dur=0, warn='', stop1=false, stop2=true;
+    v.preload='auto';v.playsInline=true;
+    v.style.cssText='position:fixed;left:-9999px;top:0;width:2px;height:2px;opacity:0;pointer-events:none;';
+    document.body.appendChild(v);
+    function cleanup(){
+      stopped=true;clearTimeout(timer);
+      try{if(rec&&rec.state!=='inactive')rec.stop();}catch(e){}
+      try{if(rec2&&rec2.state!=='inactive')rec2.stop();}catch(e){}
+      try{if(actx)actx.close();}catch(e){}
+      try{v.pause();v.removeAttribute('src');v.load();v.remove();}catch(e){}
+      URL.revokeObjectURL(url);
+    }
+    function fail(msg){if(settled)return;settled=true;cleanup();reject(new Error(msg));}
+    v.onerror=function(){fail('Video could not be decoded ('+((v.error&&v.error.message)||'unsupported or corrupt file')+')');};
+    v.onloadedmetadata=function(){
+      try{
+        dur=v.duration;
+        if(!isFinite(dur)&&isFinite(cfg.durHint))dur=cfg.durHint; // recorder-made clips often report Infinity
+        if(!isFinite(dur)||dur<=0)return fail('Video has no readable duration');
+        if(dur>PS_MAX_CLIP_SEC)return fail('Clip is longer than '+Math.round(PS_MAX_CLIP_SEC/60)+' min — split it first');
+        // Chrome applies rotation metadata: videoWidth/Height are the DISPLAYED (already-rotated) size.
+        var W=v.videoWidth,H=v.videoHeight;
+        if(!W||!H)return fail('Video has no picture track');
+        var sc=Math.min(1,1920/Math.max(W,H));
+        var cw=Math.max(2,Math.round(W*sc/2)*2), ch=Math.max(2,Math.round(H*sc/2)*2);
+        var canvas=document.createElement('canvas');canvas.width=cw;canvas.height=ch;
+        var ctx=canvas.getContext('2d');
+        var p=cfg.ident?{flip:1,angle:0,zoom:1,bright:1,contrast:1,sat:1}:psVariation(), ang=p.angle*Math.PI/180;
+        // enlarge zoom just enough that the rotated frame still covers the canvas (no black corners)
+        var cover=Math.cos(Math.abs(ang))+Math.sin(Math.abs(ang))*Math.max(cw/ch,ch/cw);
+        var zoom=cfg.ident?1:Math.max(p.zoom,cover*1.002);
+        var filt=cfg.ident?'none':'brightness('+p.bright+') contrast('+p.contrast+') saturate('+p.sat+')';
+        // Overlay (watermark / idea banner) is drawn AFTER the transforms, in the un-transformed frame, so it is never flipped/rotated/cropped/colour-shifted.
+        var ovp=tagOv?shOverlayPainter(cw,ch,tagOv):null, oc=null, octx=null;
+        if(ovp&&!cfg.ident){oc=document.createElement('canvas');oc.width=cw;oc.height=ch;octx=oc.getContext('2d');}
+        var draw=function(){
+          ctx.save();ctx.filter=filt;
+          ctx.translate(cw/2,ch/2);ctx.scale(p.flip*zoom,zoom);ctx.rotate(ang);
+          ctx.drawImage(v,-cw/2,-ch/2,cw,ch);ctx.restore();
+          if(ovp){if(cfg.ident)ovp(ctx);else if(octx){octx.drawImage(canvas,0,0);ovp(octx);}}
+        };
+        draw();
+        var stream=canvas.captureStream(30);
+        var stream2=octx?oc.captureStream(30):null;
+        // Audio: route the element's sound into a MediaStream (silent to speakers) and record it with the picture.
+        try{
+          var AC=window.AudioContext||window.webkitAudioContext;
+          actx=new AC();
+          var src=actx.createMediaElementSource(v), dst=actx.createMediaStreamDestination();
+          src.connect(dst);
+          if(actx.state==='suspended')actx.resume().catch(function(){});
+          dst.stream.getAudioTracks().forEach(function(t){stream.addTrack(t);if(stream2)stream2.addTrack(t);});
+        }catch(ae){warn='audio not carried over ('+ae.message+')';}
+        var bps=Math.max(2500000,Math.min(10000000,Math.round(cw*ch*30*0.07)));
+        var opts={mimeType:pick.mime,videoBitsPerSecond:bps};
+        if(stream.getAudioTracks().length)opts.audioBitsPerSecond=128000;
+        rec=new MediaRecorder(stream,opts);
+        rec.ondataavailable=function(e){if(e.data&&e.data.size)chunks.push(e.data);};
+        rec.onerror=function(e){fail('Recorder error: '+((e.error&&e.error.message)||'unknown'));};
+        var finish=function(){
+          if(settled||!stop1||!stop2)return;
+          var type=pick.mime.split(';')[0];
+          var blob=new Blob(chunks,{type:type});
+          if(blob.size<1000)return fail('Encoder produced an empty file');
+          var ovBlob=null;
+          if(rec2){
+            ovBlob=new Blob(chunks2,{type:type});
+            if(ovBlob.size<1000)return fail('Encoder produced an empty overlay file');
+          }
+          settled=true;cleanup();
+          resolve({blob:blob,ovBlob:ovBlob,ext:pick.ext,dur:dur,warn:warn});
+        };
+        rec.onstop=function(){stop1=true;finish();};
+        if(stream2){
+          stop2=false;
+          rec2=new MediaRecorder(stream2,opts);
+          rec2.ondataavailable=function(e){if(e.data&&e.data.size)chunks2.push(e.data);};
+          rec2.onerror=function(e){fail('Recorder error: '+((e.error&&e.error.message)||'unknown'));};
+          rec2.onstop=function(){stop2=true;finish();};
+        }
+        // frame pump
+        var pump=function(){
+          if(stopped)return;
+          draw();
+          try{if(onProg)onProg(Math.min(1,v.currentTime/dur),dur);}catch(e){}
+          if(v.requestVideoFrameCallback)v.requestVideoFrameCallback(pump);else requestAnimationFrame(pump);
+        };
+        v.onended=function(){
+          if(stopped)return;
+          draw();
+          setTimeout(function(){try{if(rec.state!=='inactive')rec.stop();if(rec2&&rec2.state!=='inactive')rec2.stop();}catch(e){fail('Recorder stop failed');}},200);
+        };
+        timer=setTimeout(function(){fail('Timed out re-encoding this clip');},dur*2000+30000);
+        rec.start(1000);
+        if(rec2)rec2.start(1000);
+        var startPlay=function(){return v.play();};
+        startPlay().catch(function(){
+          v.muted=true;warn='audio dropped (browser blocked unmuted playback)';
+          return v.play();
+        }).then(function(){pump();}).catch(function(e){fail('Could not play the clip ('+e.message+')');});
+      }catch(err){fail('Video setup failed: '+err.message);}
+    };
+    v.src=url;
+  });});
+}
+
+// ── IMAGE SAFETY (shiftImage has no error path — a corrupt file would never resolve) ─
+var psImgOk={};
+function psValidateImage(f){
+  if(!psImgOk[f.id]){
+    psImgOk[f.id]=new Promise(function(resolve,reject){
+      var im=new Image();
+      im.onload=function(){resolve(true);};
+      im.onerror=function(){reject(new Error('Image could not be decoded (corrupt or unsupported)'));};
+      im.src=f.url;
+    });
+  }
+  return psImgOk[f.id];
+}
+function psWithTimeout(p,ms,msg){
+  return new Promise(function(res,rej){
+    var t=setTimeout(function(){rej(new Error(msg));},ms);
+    p.then(function(v){clearTimeout(t);res(v);},function(e){clearTimeout(t);rej(e);});
+  });
+}
 function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
 
-// ── GENERATE ───────────────────────────────────────────────────────────────
-function generate(){
-  var btn=document.getElementById('ps-gb');
-  btn.disabled=true;
-  var toProc=files.filter(function(f){return selIds.has(f.id);});
-  var locs=getChkLocs();
-  results=[];
-  var pw=document.getElementById('ps-pw'),pf=document.getElementById('ps-pf'),pl=document.getElementById('ps-pl');
-  pw.classList.add('act');
-  document.getElementById('ps-es').style.display='none';
-  document.getElementById('ps-ra').innerHTML='';
-  var total=locs.length*toProc.length*varCount, done=0;
-  var work=Promise.resolve();
-  locs.forEach(function(loc){
-    var locItems=[];
-    toProc.forEach(function(f){
-      for(var i=0;i<varCount;i++){
-        (function(srcFile){
-          work=work.then(function(){
-            pl.textContent=loc+' — '+srcFile.name;
-            pf.style.width=(done/total*100)+'%';
-            if(srcFile.isVid){
-              locItems.push({blob:srcFile.file,ext:srcFile.name.split('.').pop(),isVid:true});
-              done++;return sleep(10);
-            }else{
-              return shiftImage(srcFile.file).then(function(res){
-                locItems.push({blob:res.blob,ext:res.ext,isVid:false});
-                done++;
-              });
-            }
-          });
-        })(f);
-      }
-    });
-    work=work.then(function(){results.push({loc:loc,items:locItems.slice()});locItems=[];});
-  });
-  work.then(function(){
-    pf.style.width='100%';pl.textContent='Done ✓';
-    setTimeout(function(){pw.classList.remove('act');},1000);
-    renderResults();btn.disabled=false;
-  });
+// ── FILENAMES — random per output, date prefix, unique across the whole run ─
+function psUniqueName(kind,ext,used){
+  var date=(document.getElementById('sDate').value||'').replace(/[^A-Za-z0-9_-]/g,'');
+  var n;
+  do{ n=(date?date+'_':'')+randName(ext).replace(/^img_/,kind+'_'); }while(used[n]);
+  used[n]=1;return n;
 }
 
-// ── RENDER ─────────────────────────────────────────────────────────────────
-function renderResults(){
-  var area=document.getElementById('ps-ra');
-  var date=document.getElementById('sDate').value||'DATE';
-  var prod=(document.getElementById('sProd').value||'Photos').trim();
-  var fb=date+'_'+prod;
-  area.innerHTML='';
-  var total=results.reduce(function(n,r){return n+r.items.length;},0);
-  var hdr=document.createElement('div');hdr.className='rh';
-  hdr.innerHTML='<div><div class="rt">Generated</div><div class="rm">'+results.length+' locations · '+total+' files</div></div>';
-  var sfb=document.createElement('button');sfb.className='sfb';sfb.textContent='📁 Save All to Folder';
-  sfb.onclick=function(){saveAll(fb);};
-  hdr.appendChild(sfb);area.appendChild(hdr);
-  results.forEach(function(r){
-    var sec=document.createElement('div');sec.className='ls';
-    var st=document.createElement('div');st.className='lst';st.textContent=fb+' / '+r.loc+' ('+r.items.length+' files)';
-    sec.appendChild(st);
-    var grid=document.createElement('div');grid.className='vg';
-    r.items.forEach(function(item,i){
-      var card=document.createElement('div');card.className='vc';
-      if(item.isVid){card.innerHTML='<div class="vc-vid">🎬</div><div class="vcf"><span class="vcn">'+r.loc+' v'+(i+1)+'</span><button class="dlb">Save</button></div>';}
-      else{var u=URL.createObjectURL(item.blob);card.innerHTML='<img src="'+u+'" alt=""><div class="vcf"><span class="vcn">'+r.loc+' v'+(i+1)+'</span><button class="dlb">Save</button></div>';}
-      card.querySelector('.dlb').addEventListener('click',function(){triggerDL(item.blob,randName(item.ext));});
-      grid.appendChild(card);
-    });
-    sec.appendChild(grid);area.appendChild(sec);
-  });
-}
-
-// ── SAVE TO FOLDER (File System Access API) ────────────────────────────────
-async function saveAll(fb){
-  if(!window.showDirectoryPicker){
-    for(var r of results)for(var i=0;i<r.items.length;i++){triggerDL(r.items[i].blob,randName(r.items[i].ext));await sleep(150);}
-    return;
-  }
-  try{
-    var root=await window.showDirectoryPicker({mode:'readwrite'});
-    var sessDir=await root.getDirectoryHandle(fb,{create:true});
-    for(var r of results){
-      var locDir=await sessDir.getDirectoryHandle(r.loc,{create:true});
-      for(var i=0;i<r.items.length;i++){
-        var item=r.items[i];
-        var fname=randName(item.ext);
-        var fh=await locDir.getFileHandle(fname,{create:true});
-        var wr=await fh.createWritable();
-        await wr.write(item.blob);await wr.close();
-      }
-    }
-    alert('Saved to folder: '+fb);
-  }catch(err){
-    if(err.name!=='AbortError'){
-      for(var r of results)for(var i=0;i<r.items.length;i++){triggerDL(r.items[i].blob,randName(r.items[i].ext));await sleep(150);}
-    }
-  }
-}
+// ── GENERATE / RENDER / SAVE: the unified engine (shRun, buildCard, shSaveAll…) is in the shared setup script near the end of this file ──
+function generate(){ return shRun('ps'); }
 
 function triggerDL(blob,filename){
   var a=document.createElement('a');
@@ -3816,6 +3711,702 @@ function syncDebugFromSheet(){
 <script>
 
 // ── BARRELCO UNIFIED NAV ──────────────────────────────────────────────────
+// (nav script continues below the shared setup script)
+</script>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════════
+// SHARED SETUP · TAGS · OVERLAYS · UNIFIED RUN ENGINE  (ListingForge + PhotoShift)
+// One setup node (#shSetup: products, locations, per-product upload boxes, shift + overlay settings) is moved between the
+// two tabs by bcNav, so both tabs always show the very same selection. ListingForge = Text and/or Photos; PhotoShift = Photos only.
+// Overlays (watermark = Mine, idea banner = Idea) are drawn on the FINISHED shifted output, after flip/rotate/crop/filters.
+// ══════════════════════════════════════════════════════════════════════════════
+var SH_TAGNAME={none:'None',mine:'Mine',idea:'Idea'};
+var shImportTag='none', shTagSel=new Set(), shResSel=new Set();
+var shCustomLocs=[], shLocSel={};
+var shResults=[], shTagBusy=false, shRootHandle=null, shClearFirst=true, shIdN=0;
+var shOv=null, shLogoImg=null, shLogoReady=null, shMeasureCtx=null;
+var SH_OV_DEF={wm:{type:'text',text:'BarrelCo',textSize:6,color:'#ffffff',opacity:60,pos:'br',logoSize:22,logoData:''},banner:{text:'PROJECT IDEA - NOT FOR SALE',bg:'#c62828'}};
+var SH_LOC_ALIASES={baltimoren:'bal_n',baltimores:'bal_s',baltimoree:'bal_e',baltimorew:'bal_w',baltimorelaurel:'bal_l',winchester:'win',waynesboro:'way',rural:'rur'};
+
+function shUid(){return 'r'+(++shIdN)+Math.random().toString(36).slice(2,6);}
+function shLsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function shLsSet(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}}
+function shNorm(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'');}
+function shDbg(m){if(typeof logDebug==='function'){try{logDebug(m);}catch(e){}}}
+function shMctx(){if(!shMeasureCtx)shMeasureCtx=document.createElement('canvas').getContext('2d');return shMeasureCtx;}
+
+// ── LOCATIONS: built-in ListingForge locations + custom (photo-only) ones, one shared selection ──
+function shAllLocs(){
+  var list=(LOCATIONS||[]).slice();
+  shCustomLocs.forEach(function(n){list.push({id:'c:'+psSlug(n),name:n,custom:true});});
+  return list;
+}
+function shChkLocs(){return shAllLocs().filter(function(l){return shLocSel[l.id];});}
+function shSaveCustomLocs(){shLsSet('bc_custom_locs_'+CURRENT_VENTURE,JSON.stringify(shCustomLocs));}
+function shLoadCustomLocs(){
+  shCustomLocs=[];
+  try{shCustomLocs=JSON.parse(shLsGet('bc_custom_locs_'+CURRENT_VENTURE)||'[]');}catch(e){}
+  if(!Array.isArray(shCustomLocs))shCustomLocs=[];
+  shCustomLocs=shCustomLocs.filter(function(n){return typeof n==='string'&&psSlug(n);});
+}
+// One-time, non-destructive: PhotoShift's old free-text list (ps_locs_<venture>) is folded into the shared list.
+// Names that match a ListingForge location are merged into it; the rest are kept as custom photo-only locations. The old key is left untouched.
+function shMigrateOldLocs(){
+  var doneKey='bc_shared_locs_migrated_'+CURRENT_VENTURE;
+  if(shLsGet(doneKey))return;
+  var raw=shLsGet('ps_locs_'+CURRENT_VENTURE);
+  if(!raw&&CURRENT_VENTURE==='barrelco')raw=shLsGet('ps_locs');
+  var old=[];
+  if(raw){try{old=JSON.parse(raw);}catch(e){old=[];}}
+  if(!Array.isArray(old))old=[];
+  var merged=[],kept=[];
+  old.forEach(function(nm){
+    var n=shNorm(nm);if(!n)return;
+    var hit=(LOCATIONS||[]).filter(function(l){return shNorm(l.name)===n;})[0];
+    if(!hit&&CURRENT_VENTURE==='barrelco'&&SH_LOC_ALIASES[n])hit=(LOCATIONS||[]).filter(function(l){return l.id===SH_LOC_ALIASES[n];})[0];
+    if(hit){merged.push(String(nm)+' → '+hit.name);return;}
+    var disp=String(nm).replace(/_/g,' ').replace(/\s+/g,' ').trim();
+    if(disp&&shCustomLocs.map(shNorm).indexOf(shNorm(disp))<0)shCustomLocs.push(disp);
+    kept.push(disp);
+  });
+  if(old.length){
+    shSaveCustomLocs();
+    shLsSet('bc_shared_locs_note_'+CURRENT_VENTURE,'PhotoShift now shares ListingForge\'s locations. Your old PhotoShift list ('+old.length+') was folded in: '+merged.length+' matched existing locations'+(merged.length?' ('+merged.join('; ')+')':'')+', '+kept.length+' kept as custom photo-only locations'+(kept.length?' ('+kept.join(', ')+')':'')+'. Nothing was deleted; the old list is still saved.');
+  }
+  shLsSet(doneKey,'1');
+}
+function shRenderMigNote(){
+  var host=document.getElementById('shMig');if(!host)return;
+  host.innerHTML='';
+  var n=shLsGet('bc_shared_locs_note_'+CURRENT_VENTURE);
+  if(!n)return;
+  var d=document.createElement('div');d.className='sh-note';d.style.marginBottom='7px';
+  d.innerHTML=psEsc(n)+' <button type="button" class="alb" style="margin-left:6px;">Got it</button>';
+  d.querySelector('button').addEventListener('click',function(){try{localStorage.removeItem('bc_shared_locs_note_'+CURRENT_VENTURE);}catch(e){}shRenderMigNote();});
+  host.appendChild(d);
+}
+function shFirstBuiltinProd(){
+  var l=(psSel||[]).map(psProdByKey).filter(function(p){return p&&p.prod;});
+  return l.length?l[0].prod:null;
+}
+function shRenderLocs(){
+  var ll=document.getElementById('ll');if(!ll)return;
+  var open={};
+  Array.from(ll.querySelectorAll('.loc-editor.open')).forEach(function(e){open[e.dataset.lid]=1;});
+  ll.innerHTML='';
+  var p0=shFirstBuiltinProd();
+  shAllLocs().forEach(function(loc){
+    var wrap=document.createElement('div');wrap.className='sh-locwrap';wrap.dataset.lid=loc.id;
+    var row=document.createElement('div');row.className='li'+(shLocSel[loc.id]?' chk':'');row.dataset.loc=loc.id;
+    row.innerHTML='<div class="lck">'+(shLocSel[loc.id]?'✓':'')+'</div><span class="sh-lname">'+psEsc(loc.name)+'</span>'
+      +(loc.custom?'<span class="sh-badge">photos only</span>':'<span class="sh-lsku sh-textonly">'+(p0?psEsc(buildSKU(p0,loc)):'')+'</span><span class="sh-ledit sh-textonly" title="Edit pickup / delivery text">✎</span>')
+      +(loc.custom?'<span class="ldel" title="Remove custom location">✕</span>':'');
+    row.addEventListener('click',function(e){
+      var t=e.target;
+      if(t.classList.contains('ldel')){e.stopPropagation();shRemoveCustomLoc(loc.id);return;}
+      if(t.classList.contains('sh-ledit')){e.stopPropagation();var ed=wrap.querySelector('.loc-editor');if(ed)ed.classList.toggle('open');return;}
+      if(shLocSel[loc.id])delete shLocSel[loc.id];else shLocSel[loc.id]=true;
+      row.classList.toggle('chk',!!shLocSel[loc.id]);
+      row.querySelector('.lck').textContent=shLocSel[loc.id]?'✓':'';
+      shSelChanged();
+    });
+    wrap.appendChild(row);
+    if(!loc.custom){
+      var s=getLocSettings(loc.id);
+      var ed2=document.createElement('div');ed2.className='loc-editor sh-textonly'+(open[loc.id]?' open':'');ed2.dataset.lid=loc.id;
+      ed2.innerHTML='<div class="le-field"><label>Pickup location text</label><textarea id="le-pickup-'+loc.id+'" rows="2">'+psEsc(s.pickup||'')+'</textarea></div>'
+        +'<div class="le-field"><label>Delivery note (leave blank to omit)</label><input type="text" id="le-delivery-'+loc.id+'" value="'+psEsc(s.delivery||'')+'"></div>'
+        +'<button type="button" class="le-save">Save</button>';
+      ed2.querySelector('.le-save').addEventListener('click',function(){
+        var dv=document.getElementById('le-delivery-'+loc.id).value.trim();
+        saveLocSettings(loc.id,{pickup:document.getElementById('le-pickup-'+loc.id).value.trim(),delivery:dv,includeDelivery:!!dv});
+        ed2.classList.remove('open');
+      });
+      wrap.appendChild(ed2);
+    }
+    ll.appendChild(wrap);
+  });
+}
+function addLoc(){
+  var inp=document.getElementById('ali');
+  var val=(inp.value||'').replace(/\s+/g,' ').trim();
+  if(!val||!psSlug(val))return;
+  var n=shNorm(val),ex=shAllLocs().filter(function(l){return shNorm(l.name)===n;})[0];
+  if(ex)shLocSel[ex.id]=true;
+  else{shCustomLocs.push(val);shSaveCustomLocs();shLocSel['c:'+psSlug(val)]=true;}
+  inp.value='';shRenderLocs();shSelChanged();
+}
+function shRemoveCustomLoc(id){
+  shCustomLocs=shCustomLocs.filter(function(n){return 'c:'+psSlug(n)!==id;});
+  delete shLocSel[id];shSaveCustomLocs();shRenderLocs();shSelChanged();
+}
+function shSelChanged(){shUpdButtons();updPrev();}
+
+// ── BATCH IMPORT TAG ("tag new uploads as") ──
+document.addEventListener('click',function(e){
+  var b=e.target.closest?e.target.closest('.sh-imp-b'):null;
+  if(!b)return;
+  shImportTag=b.dataset.imp||'none';
+  document.querySelectorAll('.sh-imp-b').forEach(function(x){x.classList.toggle('act',x.dataset.imp===shImportTag);});
+});
+
+// ── BUTTON STATE (ListingForge Generate + PhotoShift Generate) ──
+function shSwitch(name){var el=document.getElementById(name==='text'?'swText':'swPhotos');return !el||el.checked;}
+function shHasFiles(){return (psSel||[]).some(function(k){return psSelectedFor(k).length>0;});}
+function shHasTextable(){
+  var hasP=(psSel||[]).some(function(k){var p=psProdByKey(k);return p&&p.prod;});
+  return hasP&&shChkLocs().some(function(l){return !l.custom;});
+}
+function shUpdButtons(){
+  var anyLoc=shChkLocs().length>0;
+  var b=document.getElementById('ps-gb');
+  if(b)b.disabled=psBusy||shTagBusy||!(anyLoc&&shHasFiles());
+  var g=document.getElementById('genBtn'),hint=document.getElementById('lfHint');
+  if(!g)return;
+  var t=shSwitch('text'),p=shSwitch('photos'),why='';
+  if(!t&&!p)why='Turn on Text and/or Photos.';
+  else if(!(psSel||[]).length)why='Select at least one product.';
+  else if(!anyLoc)why='Select at least one location.';
+  else if(t&&!p&&!shHasTextable())why='Text needs a built-in product and location (custom ones are photos only).';
+  else if(!t&&p&&!shHasFiles())why='Photos only: add photos/videos to a product\'s box.';
+  else if(t&&p&&!shHasTextable()&&!shHasFiles())why='Add photos, or pick a built-in product and location for text.';
+  g.disabled=psBusy||shTagBusy||!!why;
+  if(hint)hint.textContent=why;
+  g.textContent=psBusy?'Generating…':(t&&p?'Generate Listings + Photos →':t?'Generate Listings →':'Generate Photos →');
+}
+function shMountSetup(app){
+  var el=document.getElementById('shSetup');if(!el)return;
+  var slot=document.getElementById(app==='photoshift'?'psSetupSlot':'lfSetupSlot');
+  if(slot&&el.parentNode!==slot)slot.appendChild(el);
+  el.classList.toggle('sh-photos-only',app==='photoshift');
+  shUpdButtons();
+}
+
+// ── OVERLAY SETTINGS (saved per venture in localStorage) ──
+function shOvLoad(){
+  shOv=JSON.parse(JSON.stringify(SH_OV_DEF));
+  try{
+    var s=JSON.parse(shLsGet('bc_overlay_'+CURRENT_VENTURE)||'null');
+    if(s){if(s.wm)Object.assign(shOv.wm,s.wm);if(s.banner)Object.assign(shOv.banner,s.banner);}
+  }catch(e){}
+  shLogoLoad().then(function(){shOvPreview();});
+}
+function shOvSave(){return shLsSet('bc_overlay_'+CURRENT_VENTURE,JSON.stringify(shOv));}
+function shLogoLoad(){
+  shLogoImg=null;shLogoReady=null;
+  if(!shOv||!shOv.wm.logoData)return Promise.resolve(null);
+  shLogoReady=new Promise(function(res){
+    var im=new Image();
+    im.onload=function(){shLogoImg=im;res(im);};
+    im.onerror=function(){res(null);};
+    im.src=shOv.wm.logoData;
+  });
+  return shLogoReady;
+}
+function shEnsureLogo(){return shLogoReady||Promise.resolve(null);}
+function shOvLabels(){
+  var g=function(id){return document.getElementById(id);};
+  if(!g('ovTextSizeV'))return;
+  g('ovTextSizeV').textContent=shOv.wm.textSize+'%';g('ovLogoSizeV').textContent=shOv.wm.logoSize+'%';g('ovOpacityV').textContent=shOv.wm.opacity+'%';
+}
+function shOvSync(){
+  var g=function(id){return document.getElementById(id);};
+  if(!g('ovText')||!shOv)return;
+  var w=shOv.wm;
+  g('ovText').value=w.text;g('ovTextSize').value=w.textSize;g('ovColor').value=w.color;g('ovOpacity').value=w.opacity;
+  g('ovPos').value=w.pos;g('ovLogoSize').value=w.logoSize;g('ovBannerText').value=shOv.banner.text;g('ovBannerBg').value=shOv.banner.bg;
+  g('ovTypeText').classList.toggle('act',w.type==='text');g('ovTypeLogo').classList.toggle('act',w.type==='logo');
+  g('ovLogoState').textContent=w.logoData?'Logo saved ✓':'No logo uploaded yet (text is used until you add one)';
+  shOvLabels();
+}
+function shOvIn(){
+  var g=function(id){return document.getElementById(id);};
+  var w=shOv.wm;
+  w.text=g('ovText').value;w.textSize=parseInt(g('ovTextSize').value)||6;w.color=g('ovColor').value||'#ffffff';
+  w.opacity=parseInt(g('ovOpacity').value)||60;w.pos=g('ovPos').value||'br';w.logoSize=parseInt(g('ovLogoSize').value)||22;
+  shOv.banner.text=g('ovBannerText').value;shOv.banner.bg=g('ovBannerBg').value||'#c62828';
+  shOvSave();shOvLabels();shOvPreview();
+}
+function shOvSetType(t){shOv.wm.type=t==='logo'?'logo':'text';shOvSave();shOvSync();shOvPreview();}
+function shOvLogoPick(inp){
+  var f=inp.files&&inp.files[0];inp.value='';
+  if(!f)return;
+  var url=URL.createObjectURL(f),im=new Image();
+  im.onload=function(){
+    var sc=Math.min(1,600/Math.max(im.naturalWidth,im.naturalHeight));
+    var c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.naturalWidth*sc));c.height=Math.max(1,Math.round(im.naturalHeight*sc));
+    c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+    URL.revokeObjectURL(url);
+    shOv.wm.logoData=c.toDataURL('image/png');shOv.wm.type='logo';
+    var saved=shOvSave();
+    shLogoLoad().then(function(){shOvSync();shOvPreview();if(!saved){var st=document.getElementById('ovLogoState');if(st)st.textContent='Logo loaded but too large to save on this device — re-upload it next visit';}});
+  };
+  im.onerror=function(){URL.revokeObjectURL(url);var st=document.getElementById('ovLogoState');if(st)st.textContent='That file could not be read as an image.';};
+  im.src=url;
+}
+function shOvLogoClear(){shOv.wm.logoData='';shOv.wm.type='text';shOvSave();shLogoLoad();shOvSync();shOvPreview();}
+function shOvPreview(){
+  ['mine','idea'].forEach(function(tag){
+    var c=document.getElementById(tag==='mine'?'ovPrevMine':'ovPrevIdea');if(!c||!shOv)return;
+    var ctx=c.getContext('2d'),w=c.width,h=c.height;
+    var gr=ctx.createLinearGradient(0,0,w,h);gr.addColorStop(0,'#8fb8d8');gr.addColorStop(0.55,'#c9b98a');gr.addColorStop(1,'#5b6b4a');
+    ctx.fillStyle=gr;ctx.fillRect(0,0,w,h);
+    ctx.fillStyle='rgba(60,40,20,.85)';ctx.fillRect(w*0.3,h*0.35,w*0.4,h*0.5);
+    ctx.fillStyle='rgba(255,255,255,.55)';ctx.fillRect(w*0.06,h*0.08,w*0.2,h*0.2);
+    var p=shOverlayPainter(w,h,tag);if(p)p(ctx);
+  });
+}
+
+// ── OVERLAY DRAWING (works on any canvas size; used for photos and for every video frame) ──
+function shHexLum(hex){
+  var m=/^#?([0-9a-f]{6})$/i.exec(String(hex||''));if(!m)return 0;
+  var n=parseInt(m[1],16),f=function(c){c/=255;return c<=0.03928?c/12.92:Math.pow((c+0.055)/1.055,2.4);};
+  return 0.2126*f((n>>16)&255)+0.7152*f((n>>8)&255)+0.0722*f(n&255);
+}
+// Idea banner: solid band across the bottom; wording auto-fits (shrinks, then wraps to up to 4 lines) so it is never cropped.
+function shBannerLayout(w,h,text){
+  var ctx=shMctx();
+  var t=String(text||'').replace(/\s+/g,' ').trim()||'PROJECT IDEA - NOT FOR SALE';
+  var short=Math.min(w,h),band1=Math.max(28,Math.round(short*0.09)),maxW=w*0.92;
+  var f0=band1*0.52,minF=Math.max(10,short*0.022);
+  var font=function(px){return 'bold '+Math.max(1,Math.round(px))+'px Arial, Helvetica, sans-serif';};
+  var wrap=function(px){
+    ctx.font=font(px);
+    var out=[],cur='';
+    t.split(' ').forEach(function(wd){
+      while(ctx.measureText(wd).width>maxW&&wd.length>1){
+        var k=wd.length;
+        while(k>1&&ctx.measureText(wd.slice(0,k)).width>maxW)k--;
+        if(cur){out.push(cur);cur='';}
+        out.push(wd.slice(0,k));wd=wd.slice(k);
+      }
+      var s=cur?cur+' '+wd:wd;
+      if(ctx.measureText(s).width<=maxW)cur=s;else{if(cur)out.push(cur);cur=wd;}
+    });
+    if(cur)out.push(cur);
+    return out;
+  };
+  var px,lines=null;
+  for(px=f0;px>=Math.max(minF,band1*0.34);px*=0.94){var l1=wrap(px);if(l1.length===1){lines=l1;break;}}
+  if(!lines){for(px=f0;px>=minF;px*=0.94){var l2=wrap(px);if(l2.length<=2){lines=l2;break;}}}
+  if(!lines){
+    px=minF;lines=wrap(px);
+    if(lines.length>4){
+      lines=lines.slice(0,4);var last=lines[3];ctx.font=font(px);
+      while(last.length>1&&ctx.measureText(last+'…').width>maxW)last=last.slice(0,-1);
+      lines[3]=last+'…';
+    }
+  }
+  var lh=px*1.22,bandH=Math.round(Math.max(band1,lines.length*lh+px*0.8));
+  bandH=Math.min(bandH,Math.round(h*0.45));
+  return {font:font(px),lines:lines,bandH:bandH,lh:lh};
+}
+function shBannerPainter(w,h){
+  var lay=shBannerLayout(w,h,shOv.banner.text),bg=shOv.banner.bg||'#c62828',fg=shHexLum(bg)>0.179?'#111111':'#ffffff';
+  return function(ctx){
+    ctx.save();ctx.globalAlpha=1;ctx.filter='none';
+    ctx.fillStyle=bg;ctx.fillRect(0,h-lay.bandH,w,lay.bandH);
+    ctx.fillStyle=fg;ctx.font=lay.font;ctx.textAlign='center';ctx.textBaseline='middle';
+    var y0=h-lay.bandH+(lay.bandH-lay.lines.length*lay.lh)/2+lay.lh/2;
+    lay.lines.forEach(function(ln,i){ctx.fillText(ln,w/2,y0+i*lay.lh);});
+    ctx.restore();
+  };
+}
+// Watermark: text (with a contrasting outline so it reads on any photo) or the uploaded logo; corner / center / tiled.
+function shWatermarkPainter(w,h){
+  var wm=shOv.wm,short=Math.min(w,h),alpha=Math.max(0.05,Math.min(1,(wm.opacity||60)/100)),m=Math.round(short*0.03);
+  var blk,bw,bh;
+  if(wm.type==='logo'&&shLogoImg&&shLogoImg.naturalWidth){
+    bw=Math.max(4,Math.round(w*(wm.logoSize||22)/100));bh=Math.max(4,Math.round(bw*shLogoImg.naturalHeight/shLogoImg.naturalWidth));
+    if(bh>h*0.5){bh=Math.round(h*0.5);bw=Math.max(4,Math.round(bh*shLogoImg.naturalWidth/shLogoImg.naturalHeight));}
+    blk=document.createElement('canvas');blk.width=bw;blk.height=bh;blk.getContext('2d').drawImage(shLogoImg,0,0,bw,bh);
+  }else{
+    var txt=String(wm.text||'').trim()||'BarrelCo',px=Math.max(10,Math.round(short*(wm.textSize||6)/100));
+    var mc=shMctx(),font=function(p){return 'bold '+p+'px Arial, Helvetica, sans-serif';};
+    mc.font=font(px);var tw=Math.ceil(mc.measureText(txt).width);
+    while(tw>w*0.9&&px>8){px=Math.floor(px*0.9);mc.font=font(px);tw=Math.ceil(mc.measureText(txt).width);}
+    var pad=Math.ceil(px*0.14);bw=tw+pad*2;bh=Math.round(px*1.2)+pad*2;
+    blk=document.createElement('canvas');blk.width=bw;blk.height=bh;
+    var bc=blk.getContext('2d'),col=wm.color||'#ffffff';
+    bc.font=font(px);bc.textBaseline='middle';bc.textAlign='left';bc.lineJoin='round';
+    bc.lineWidth=Math.max(1,px*0.12);bc.strokeStyle=shHexLum(col)>0.4?'#000000':'#ffffff';
+    bc.strokeText(txt,pad,bh/2);bc.fillStyle=col;bc.fillText(txt,pad,bh/2);
+  }
+  var pos=wm.pos||'br';
+  return function(ctx){
+    ctx.save();ctx.globalAlpha=alpha;ctx.filter='none';
+    if(pos==='tile'){
+      var sx=Math.round(bw*1.7),sy=Math.round(bh*3.2),r=0;
+      for(var y=m;y<h;y+=sy,r++){for(var x=m+(r%2?Math.round(sx/2):0);x<w;x+=sx){ctx.drawImage(blk,x,y);}}
+    }else{
+      var x0=(pos==='tl'||pos==='bl')?m:pos==='c'?Math.round((w-bw)/2):w-bw-m;
+      var y0=(pos==='tl'||pos==='tr')?m:pos==='c'?Math.round((h-bh)/2):h-bh-m;
+      ctx.drawImage(blk,x0,y0);
+    }
+    ctx.restore();
+  };
+}
+function shOverlayPainter(w,h,tag){
+  if(tag==='idea')return shBannerPainter(w,h);
+  if(tag==='mine')return shWatermarkPainter(w,h);
+  return null;
+}
+// Post-step for a photo: takes the CLEAN shifted blob, returns a new blob with the overlay drawn on top (shiftImage itself is untouched).
+async function shOverlayImage(baseBlob,tag){
+  await shEnsureLogo();
+  var bmp=await createImageBitmap(baseBlob);
+  try{
+    var c=document.createElement('canvas');c.width=bmp.width;c.height=bmp.height;
+    var ctx=c.getContext('2d');ctx.drawImage(bmp,0,0);
+    var paint=shOverlayPainter(c.width,c.height,tag);if(paint)paint(ctx);
+    return await new Promise(function(res,rej){c.toBlob(function(b){b?res(b):rej(new Error('Could not encode image'));},'image/jpeg',0.95);});
+  }finally{if(bmp.close)bmp.close();}
+}
+
+// ── LISTING CARD (text section as before; photos/videos section is per-item with tags) ──
+function buildCard(r){
+  var card=document.createElement('div');
+  card.className='listing-card sh-combo';card.dataset.folder=r.folder;
+  var key=String(r.loc.id+'-'+(r.prod.id||r.pe.key)).replace(/[^A-Za-z0-9_-]/g,'_');
+  var body='';
+  if(r.text){
+    var tl=r.title.length,tc=tl<=70?'ok':tl<=80?'warn':'over';
+    body+='<div class="lf"><div class="lf-lbl">Title <span class="cc '+tc+'">'+tl+' chars</span><button class="copy-btn" data-copy="title-'+key+'">Copy</button></div>'
+      +'<div class="lf-content title-box" id="title-'+key+'">'+escH(r.title)+'</div></div>'
+      +'<div class="lf"><div class="lf-lbl">Description <button class="copy-btn" data-copy="desc-'+key+'">Copy</button></div>'
+      +'<div class="lf-content" id="desc-'+key+'">'+escH(r.desc)+'</div></div>'
+      +(r.group?'<div class="gpc"><div class="gpl">Group Post <button class="copy-btn" data-copy="gp-'+key+'">Copy</button></div>'
+      +'<div class="gp-content" id="gp-'+key+'">'+escH(r.group)+'</div></div>':'');
+  }else if(r.textErr){
+    body+='<div class="sh-note err">Listing text failed: '+escH(r.textErr)+'</div>';
+  }else if(r.wantText){
+    body+='<div class="sh-note">Photos only — custom products/locations have no listing text.</div>';
+  }
+  body+='<div class="sh-photos"></div>';
+  card.innerHTML='<div class="listing-hdr"><span class="listing-loc">'+escH(r.loc.name)+'</span><span class="listing-sku">'+escH(r.text?r.sku:r.pe.name)+'</span><div class="listing-hsp"></div></div>'
+    +'<div class="listing-body">'+body+'</div>';
+  shRenderPhotos(r,card.querySelector('.sh-photos'));
+  card.addEventListener('click',function(e){
+    if(e.target.closest('.save-photos-btn'))return;
+    var btn=e.target.closest('.copy-btn');
+    if(!btn||!btn.dataset.copy)return;
+    var el=document.getElementById(btn.dataset.copy);
+    if(!el)return;
+    navigator.clipboard.writeText(el.innerText).then(function(){
+      btn.textContent='Copied ✓';btn.classList.add('copied');
+      setTimeout(function(){btn.textContent='Copy';btn.classList.remove('copied');},2000);
+    });
+  });
+  return card;
+}
+function psFlatName(r,item){return (r.folder+' - '+item.fname).replace(/[\/\\:*?"<>|]/g,'');}
+function shRenderPhotos(c,host){
+  host.innerHTML='';
+  if(!c.items.length)return;
+  var ok=c.items.filter(function(i){return !i.error;}).length,bad=c.items.length-ok;
+  var lf=document.createElement('div');lf.className='lf';
+  lf.innerHTML='<div class="lf-lbl">Photos &amp; videos ('+ok+(bad?', <span style="color:var(--red)">'+bad+' failed</span>':'')+')'+(ok?' <button type="button" class="save-photos-btn copy-btn">📁 Save this folder</button>':'')+'</div>';
+  var grid=document.createElement('div');grid.className='vg';grid.style.marginTop='6px';
+  c.items.forEach(function(it){grid.appendChild(shBuildTile(c,it));});
+  lf.appendChild(grid);
+  var path=document.createElement('div');path.style.cssText='font-size:.6rem;color:var(--dim);margin-top:4px;';path.textContent='→ '+c.folder;
+  lf.appendChild(path);
+  host.appendChild(lf);
+  var sb=lf.querySelector('.save-photos-btn');
+  if(sb)sb.addEventListener('click',function(){shSaveCombos([c]);});
+}
+function shTileFill(c,it,card){
+  var idx=c.items.indexOf(it),busy=card.classList.contains('busy');
+  var media=it.isVid?'<video class="ps2-vid" src="'+it.url+'" controls playsinline preload="metadata"></video>':'<img src="'+it.url+'" alt="">';
+  card.innerHTML='<div class="sh-rtop"><span class="sh-rsel" role="checkbox" aria-label="Select this file"></span><span class="sh-tag sh-t-'+it.tag+'">'+SH_TAGNAME[it.tag]+(busy?' …':'')+'</span></div>'
+    +media+'<div class="vcf"><span class="vcn">v'+(idx+1)+' · '+psEsc(it.ext)+(it.warn?' ⚠':'')+'</span><button type="button" class="dlb">Save</button></div>';
+  var on=shResSel.has(it.id);
+  card.classList.toggle('rsel',on);
+  var s=card.querySelector('.sh-rsel');if(s)s.textContent=on?'✓':'';
+  if(it.warn)card.title=it.warn;
+}
+function shBuildTile(c,it){
+  var card=document.createElement('div');
+  if(it.error){
+    card.className='vc ps2-errc';
+    card.innerHTML='<div class="ps2-err">⚠ '+(it.isVid?'Video':'Photo')+' failed<br><b>'+psEsc(it.srcName)+'</b><br>'+psEsc(it.error)+'</div>';
+    return card;
+  }
+  card.className='vc sh-rtile';card.dataset.iid=it.id;it.tile=card;
+  if(!it.url)it.url=URL.createObjectURL(it.blob);
+  shTileFill(c,it,card);
+  card.addEventListener('click',function(e){
+    if(e.target.closest('.dlb')){
+      if(shTagBusy){shStat('Wait for the overlay encode to finish, then save.');return;}
+      triggerDL(it.blob,psFlatName(c,it));return;
+    }
+    if(e.target.closest('video')&&!e.target.closest('.sh-rsel'))return;
+    if(shResSel.has(it.id))shResSel.delete(it.id);else shResSel.add(it.id);
+    shResRefresh();
+  });
+  return card;
+}
+function shResRefresh(){
+  document.querySelectorAll('.sh-rtile').forEach(function(t){
+    var on=shResSel.has(t.dataset.iid);
+    t.classList.toggle('rsel',on);
+    var s=t.querySelector('.sh-rsel');if(s)s.textContent=on?'✓':'';
+  });
+  document.querySelectorAll('.sh-rcount').forEach(function(e){e.textContent=shResSel.size;});
+}
+function shStat(t){document.querySelectorAll('.sh-rstat').forEach(function(e){e.textContent=t||'';});}
+function shRevokeResults(){
+  shResults.forEach(function(c){c.items.forEach(function(it){if(it.url){try{URL.revokeObjectURL(it.url);}catch(e){}it.url=null;}});});
+  shResSel.clear();
+}
+function shBuildResBar(area){
+  var old=area.querySelector('.sh-resbar');if(old)old.remove();
+  var total=0,failed=0;
+  shResults.forEach(function(c){c.items.forEach(function(it){if(it.error)failed++;else total++;});});
+  if(!total&&!failed)return null;
+  var folders=shResults.filter(function(c){return c.items.some(function(i){return !i.error;});}).length;
+  var bar=document.createElement('div');bar.className='sh-resbar';
+  bar.innerHTML='<div class="rh"><div><div class="rt">Photos &amp; videos</div><div class="rm">'+folders+' folders · '+total+' files'+(failed?' · <span style="color:var(--red)">'+failed+' failed</span>':'')+'</div></div>'
+    +'<button type="button" class="sfb" data-r="saveall">📁 Save All to Folders</button></div>'
+    +'<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;"><label class="sh-clr"><input type="checkbox" class="sh-clrcb"'+(shClearFirst?' checked':'')+'> clear old files in each folder first</label>'
+    +'<button type="button" class="alb" data-r="chroot">Change save folder</button></div>'
+    +'<div class="sh-restools"><span class="sh-barl">Select</span><button type="button" data-r="all">All</button><button type="button" data-r="clear">Clear</button>'
+    +'<span class="sh-barl">Set tag on selected (<span class="sh-rcount">0</span>)</span>'
+    +'<button type="button" data-r="tag" data-tag="mine">Mine</button><button type="button" data-r="tag" data-tag="idea">Idea</button><button type="button" data-r="tag" data-tag="none">None</button></div>'
+    +'<div class="sh-hint" style="margin:0;">Tap thumbnails to select. Changing a tag re-draws the watermark / banner from the stored clean copy — no new random shift. Photos update instantly; videos re-encode in real time. Save always writes the current version.</div>'
+    +'<div class="sh-rstat" aria-live="polite"></div>';
+  bar.addEventListener('click',function(e){
+    var b=e.target.closest('button');if(!b)return;
+    var r=b.dataset.r;
+    if(r==='saveall')shSaveCombos(shResults);
+    else if(r==='chroot'){shRootHandle=null;shStat('The next save will ask which folder to use.');}
+    else if(r==='all'){shResults.forEach(function(c){c.items.forEach(function(it){if(!it.error)shResSel.add(it.id);});});shResRefresh();}
+    else if(r==='clear'){shResSel.clear();shResRefresh();}
+    else if(r==='tag')shApplyTag(b.dataset.tag);
+  });
+  bar.querySelector('.sh-clrcb').addEventListener('change',function(){shClearFirst=this.checked;});
+  area.insertBefore(bar,area.firstChild);
+  shResRefresh();
+  return bar;
+}
+
+// ── RESULT-LEVEL TAG CHANGE: re-draw the overlay from the stored clean shifted copy (no new random shift) ──
+async function shApplyTag(tag){
+  if(shTagBusy||psBusy)return;
+  var work=[];
+  shResults.forEach(function(c){c.items.forEach(function(it){if(!it.error&&shResSel.has(it.id)&&it.tag!==tag)work.push({c:c,it:it});});});
+  if(!work.length){shStat('Nothing to change — tap thumbnails to select first (selected ones may already have that tag).');return;}
+  shTagBusy=true;shUpdButtons();
+  var failed=0;
+  for(var i=0;i<work.length;i++){
+    var w=work[i],it=w.it,n=i+1,oldUrl=null;
+    if(it.tile){it.tile.classList.add('busy');shTileFill(w.c,it,it.tile);}
+    shStat('Applying '+SH_TAGNAME[tag]+' — '+n+' of '+work.length+(it.isVid&&tag!=='none'?' (video: re-encoding in real time)…':'…'));
+    try{
+      var nb;
+      if(tag==='none')nb=it.base;
+      else if(it.isVid){
+        var res=await shOverlayVideo(it.base,tag,it.dur,function(frac,dur){
+          shStat('Applying '+SH_TAGNAME[tag]+' — '+n+' of '+work.length+' · video '+Math.round(frac*100)+'% · ~'+Math.max(0,Math.ceil((1-frac)*dur))+'s left (real time)');
+        });
+        nb=res.blob;
+      }else nb=await psWithTimeout(shOverlayImage(it.base,tag),60000,'Overlay timed out');
+      it.blob=nb;it.tag=tag;it.ovErr='';
+      oldUrl=it.url;it.url=URL.createObjectURL(it.blob);
+    }catch(err){
+      failed++;it.ovErr=(err&&err.message)||String(err);
+      shDbg('Overlay change failed: '+it.srcName+' — '+it.ovErr);
+    }
+    if(it.tile){it.tile.classList.remove('busy');shTileFill(w.c,it,it.tile);if(it.ovErr)it.tile.title='Overlay failed: '+it.ovErr;}
+    if(oldUrl){(function(u){setTimeout(function(){try{URL.revokeObjectURL(u);}catch(e){}},1500);})(oldUrl);}
+  }
+  shTagBusy=false;shUpdButtons();
+  shStat('Done — '+(work.length-failed)+' updated'+(failed?', '+failed+' failed (kept the previous version)':'')+'. Save writes the current versions.');
+}
+
+// ── SAVE (File System Access API; falls back to downloads). Always writes the CURRENT (overlaid) blob of every item. ──
+async function shGetRoot(){
+  if(shRootHandle)return shRootHandle;
+  if(!window.showDirectoryPicker)return null;
+  try{shRootHandle=await window.showDirectoryPicker({mode:'readwrite'});return shRootHandle;}
+  catch(err){return (err&&err.name==='AbortError')?'abort':null;}
+}
+async function lfClearDir(dirHandle){
+  try{
+    var names=[];
+    for await (var entry of dirHandle.values()){ names.push(entry.name); }
+    for(var i=0;i<names.length;i++){ try{ await dirHandle.removeEntry(names[i]); }catch(e){} }
+  }catch(e){}
+}
+async function shWriteCombo(root,c){
+  var items=c.items.filter(function(i){return !i.error;});
+  if(!items.length)return {ok:0,bad:0};
+  var dir=await root.getDirectoryHandle(c.folder,{create:true});
+  if(shClearFirst)await lfClearDir(dir);
+  var ok=0,bad=0;
+  for(var i=0;i<items.length;i++){
+    try{
+      var fh=await dir.getFileHandle(items[i].fname,{create:true});
+      var wr=await fh.createWritable();
+      await wr.write(items[i].blob);await wr.close();ok++;
+    }catch(e){bad++;shDbg('Save failed: '+c.folder+' / '+items[i].fname+' — '+e.message);}
+  }
+  return {ok:ok,bad:bad};
+}
+async function shSaveCombos(list){
+  if(shTagBusy){shStat('Wait for the overlay encode to finish, then save.');return;}
+  list=list.filter(function(c){return c.items.some(function(i){return !i.error;});});
+  if(!list.length)return;
+  var root=await shGetRoot();
+  if(root==='abort')return;
+  if(!root){
+    var n=0;
+    for(var a=0;a<list.length;a++)for(var b=0;b<list[a].items.length;b++){var it=list[a].items[b];if(it.error)continue;triggerDL(it.blob,psFlatName(list[a],it));n++;await sleep(150);}
+    shStat('Downloaded '+n+' file'+(n===1?'':'s')+' (this browser cannot write into folders directly).');
+    return;
+  }
+  var ok=0,bad=0;shStat('Saving…');
+  try{
+    for(var k=0;k<list.length;k++){var r=await shWriteCombo(root,list[k]);ok+=r.ok;bad+=r.bad;}
+    shStat('Saved '+ok+' file'+(ok===1?'':'s')+' into '+list.length+' folder'+(list.length===1?'':'s')+' under "'+(root.name||'chosen folder')+'"'+(bad?' ('+bad+' failed to write)':''));
+  }catch(err){shStat('Save failed: '+err.message);shDbg('Save failed: '+err.message);}
+}
+
+// ── THE UNIFIED RUN ENGINE ──
+function shProgEls(origin){
+  return origin==='lf'?{pw:document.getElementById('lfPw'),pl:document.getElementById('lfPl'),pf:document.getElementById('lfPf')}
+    :{pw:document.getElementById('ps-pw'),pl:document.getElementById('ps-pl'),pf:document.getElementById('ps-pf')};
+}
+function shProg(origin,label,frac){
+  var e=shProgEls(origin);
+  if(e.pl)e.pl.textContent=label;
+  if(e.pf)e.pf.style.width=(Math.max(0,Math.min(1,frac||0))*100)+'%';
+}
+// One source file -> one shifted item. Keeps the CLEAN shifted blob (base) and the current output (blob, with overlay if tagged).
+async function shProcessOne(f,label,doneBefore,total,origin,usedNames){
+  var tag=f.tag||'none';
+  try{
+    if(f.isVid){
+      var res=await psShiftVideo(f.file,function(frac,dur){
+        shProg(origin,label+' — video '+Math.round(frac*100)+'% · ~'+Math.max(0,Math.ceil((1-frac)*dur))+'s left',(doneBefore+frac)/total);
+      },tag);
+      return {id:shUid(),base:res.blob,blob:res.ovBlob||res.blob,ext:res.ext,isVid:true,dur:res.dur,warn:res.warn,tag:tag,srcName:f.name,fname:psUniqueName('vid',res.ext,usedNames)};
+    }
+    await psValidateImage(f);
+    var ir=await psWithTimeout(shiftImage(f.file),60000,'Image processing timed out');
+    if(!ir||!ir.blob)throw new Error('Could not encode image');
+    var out=tag==='none'?ir.blob:await psWithTimeout(shOverlayImage(ir.blob,tag),60000,'Overlay timed out');
+    return {id:shUid(),base:ir.blob,blob:out,ext:ir.ext,isVid:false,tag:tag,srcName:f.name,fname:psUniqueName('img',ir.ext,usedNames)};
+  }catch(err){
+    return {id:shUid(),error:(err&&err.message)||String(err),isVid:f.isVid,srcName:f.name,tag:tag};
+  }
+}
+async function shRun(origin){
+  if(psBusy||shTagBusy)return;
+  var isLf=origin==='lf';
+  var doText=isLf&&shSwitch('text'),doPhotos=!isLf||shSwitch('photos');
+  var locs=shChkLocs(),prods=(psSel||[]).map(psProdByKey).filter(Boolean);
+  if(!locs.length||!prods.length||(!doText&&!doPhotos))return;
+  var used={},combos=[];
+  prods.forEach(function(p){
+    var srcs=doPhotos?psSelectedFor(p.key):[];   // ONLY this product's own box
+    locs.forEach(function(loc){
+      var folder=psFolderName(p.name,loc.name),base=folder,n=2;
+      while(used[folder.toLowerCase()])folder=base+' ('+(n++)+')';
+      used[folder.toLowerCase()]=1;
+      combos.push({pe:p,prod:p.prod||{id:p.key,name:p.name,code:''},loc:loc,folder:folder,srcs:srcs,items:[],text:false,textErr:'',wantText:doText,canText:!!(doText&&p.prod&&!loc.custom)});
+    });
+  });
+  combos=combos.filter(function(c){return c.srcs.length||c.canText;});
+  if(!combos.length)return;
+  // guard for long/large clips (video is re-encoded in real time)
+  var vidSec=0,bigClip=false;
+  combos.forEach(function(c){c.srcs.forEach(function(f){if(f.isVid){vidSec+=(isFinite(f.dur)?f.dur:30)*varCount;if(f.dur>PS_WARN_CLIP_SEC||f.file.size/1048576>PS_WARN_CLIP_MB)bigClip=true;}});});
+  if(vidSec>300||bigClip){
+    var okc=confirm('Video is re-encoded in real time: about '+Math.ceil(vidSec/60)+' min of processing for this run'+(bigClip?' (includes a long/large clip)':'')+'.\n\nKeep this tab open and visible until it finishes. Continue?');
+    if(!okc)return;
+  }
+  psBusy=true;shUpdButtons();
+  shRevokeResults();shResults=[];psImgOk={};
+  shClearFirst=isLf;   // ListingForge repost cadence clears old files; PhotoShift keeps its old add-only behaviour
+  var area=document.getElementById(isLf?'ra':'ps-ra');area.innerHTML='';
+  var es=document.getElementById(isLf?'emptyState':'ps-es');if(es)es.style.display='none';
+  var pe=shProgEls(origin);if(pe.pw)pe.pw.classList.add('act');
+  if(isLf&&locs.length>=4){
+    var w=document.createElement('div');w.className='timing-note';
+    w.innerHTML='<strong>⚠ Posting Reminder</strong>Never post all locations same day — FB flags it. Stagger across 2 days minimum. Baltimore Wednesday, Waynesboro/Winchester Thursday.';
+    area.appendChild(w);
+  }
+  var slots=combos.map(function(c,i){
+    var d=document.createElement('div');d.className='loading-card';
+    d.innerHTML='<div class="spinner"></div><div class="loading-txt">'+(i===0?'Working on ':'Queued: ')+escH(c.folder)+'…</div>';
+    area.appendChild(d);return d;
+  });
+  var textTotal=combos.filter(function(c){return c.canText;}).length,total=textTotal;
+  combos.forEach(function(c){total+=c.srcs.length*varCount;});
+  total=Math.max(total,1);
+  var done=0,usedNames={},textIdx=0,lastText=0;
+  var tLocs=locs.filter(function(l){return !l.custom;}),allLocNames=tLocs.map(function(l){return l.name;}).join(', ');
+  var oNote=((document.getElementById('oNote')||{}).value||'').trim();
+  usedDimIdx={};
+  try{
+    for(var ci=0;ci<combos.length;ci++){
+      var c=combos[ci];
+      if(c.canText){
+        var wait=1100-(Date.now()-lastText);
+        if(lastText&&wait>0)await sleep(wait);
+        shProg(origin,'Writing text — '+c.prod.code+' · '+c.loc.name,done/total);
+        try{
+          var t=await generateOne(c.prod,c.loc,oNote,textIdx,allLocNames,tLocs);
+          c.text=true;c.sku=t.sku;c.title=t.title;c.desc=t.desc;c.group=t.group;
+        }catch(err){
+          c.textErr=(err&&err.message)||String(err);
+          shDbg('Failed: '+c.prod.code+' / '+c.loc.name+' — '+c.textErr);
+        }
+        lastText=Date.now();textIdx++;done++;
+      }
+      for(var si=0;si<c.srcs.length;si++){
+        var f=c.srcs[si];
+        for(var vi=0;vi<varCount;vi++){
+          var label=c.folder+' — '+f.name+(varCount>1?' (v'+(vi+1)+'/'+varCount+')':'');
+          shProg(origin,label,done/total);
+          var item=await shProcessOne(f,label,done,total,origin,usedNames);
+          if(item.error)shDbg('Photo/video failed: '+c.folder+' / '+f.name+' — '+item.error);
+          c.items.push(item);done++;
+        }
+      }
+      shResults.push(c);
+      var card=buildCard(c);
+      if(slots[ci].parentNode===area)area.replaceChild(card,slots[ci]);else area.appendChild(card);
+    }
+    shProg(origin,'Done ✓',1);
+  }catch(err){
+    shProg(origin,'Stopped: '+((err&&err.message)||err),done/total);
+    shDbg('Run stopped: '+((err&&err.message)||err));
+  }finally{
+    psBusy=false;
+    slots.forEach(function(s){if(s.parentNode===area)s.remove();});
+    shBuildResBar(area);
+    shUpdButtons();
+    setTimeout(function(){if(pe.pw)pe.pw.classList.remove('act');},1000);
+  }
+}
+
+// ── LOAD / RESET WHEN THE VENTURE CHANGES (and once at startup) ──
+function shLoadVenture(){
+  shRevokeResults();shResults=[];
+  ['ra','ps-ra'].forEach(function(id){var a=document.getElementById(id);if(a)a.innerHTML='';});
+  ['emptyState','ps-es'].forEach(function(id){var e=document.getElementById(id);if(e)e.style.display='';});
+  shLocSel={};shTagSel.clear();
+  shLoadCustomLocs();shMigrateOldLocs();
+  psLoadProductsForVenture();   // renders products, upload boxes, locations, button state
+  shOvLoad();shOvSync();shOvPreview();
+  shRenderMigNote();shRenderLocs();shSelChanged();
+}
+</script>
+
+<script>
 var BC_CURRENT = 'listingforge';
 
 function bcNav(app) {
@@ -3830,6 +4421,7 @@ function bcNav(app) {
   if (app === 'wishlist') { syncWishesFromSheet(); }
   if (app === 'debug')    { renderDebugLog(); }
   if (app === 'stockshift') { if(typeof renderHistory==='function') renderHistory(); }
+  if ((app === 'listingforge' || app === 'photoshift') && typeof shMountSetup==='function') { shMountSetup(app); }
 }
 
 function syncWishesFromSheet(){
@@ -3842,7 +4434,7 @@ function syncDebugFromSheet(){
 }
 
 // init
-(function(){ bcNav('listingforge'); })();
+(function(){ if(typeof shLoadVenture==='function') shLoadVenture(); bcNav('listingforge'); })();
 
 </script>
 </body>
