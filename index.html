@@ -1099,6 +1099,55 @@ body { margin:0; }
 .bc-app.active { display:block; min-height:calc(100vh - 46px); }
 #bc-stockshift.active { display:flex; flex-direction:column; min-height:calc(100vh - 46px); }
 #bc-listingforge.active .layout { min-height:calc(100vh - 46px - 49px); }
+
+/* ── UNIFIED SETUP (one setup node shared by ListingForge + PhotoShift) ── */
+#shSetup{display:flex;flex-direction:column;gap:12px;}
+.sh-photos-only .sh-textonly{display:none !important;}
+.sh-sw{display:flex;flex-direction:column;gap:6px;}
+.sh-swl{display:flex;align-items:center;gap:8px;font-size:.72rem;cursor:pointer;min-height:30px;}
+.sh-swl input{width:18px;height:18px;accent-color:var(--acc);}
+.sh-hint{font-size:.6rem;color:var(--dim);margin-top:6px;line-height:1.5;}
+.sh-locwrap{display:flex;flex-direction:column;gap:3px;}
+.sh-lname{flex:1;min-width:0;}
+.sh-lsku{font-size:.55rem;color:var(--dim);font-family:'IBM Plex Mono',monospace;}
+.sh-ledit{font-size:.65rem;color:var(--dim);padding:4px 8px;border:1px solid var(--bdr);border-radius:3px;}
+.sh-ledit:hover{color:var(--acc);border-color:var(--acc);}
+.sh-badge{font-size:.5rem;color:var(--muted);border:1px solid var(--bdr);border-radius:8px;padding:1px 6px;white-space:nowrap;}
+.sh-note{font-size:.62rem;color:var(--muted);background:rgba(232,197,71,.07);border-radius:5px;padding:7px 9px;line-height:1.5;}
+.sh-note.err{color:var(--red);background:rgba(224,92,92,.08);}
+.sh-bar,.sh-imp,.sh-restools{display:flex;flex-wrap:wrap;gap:5px;align-items:center;}
+.sh-bar button,.sh-imp button,.sh-restools button{padding:6px 11px;min-height:34px;border:1px solid var(--bdr);border-radius:5px;background:transparent;color:var(--muted);font-family:inherit;font-size:.62rem;cursor:pointer;}
+.sh-bar button:hover,.sh-imp button:hover,.sh-restools button:hover{border-color:var(--acc);color:var(--acc);}
+.sh-imp button.act{border-color:var(--acc);background:rgba(232,197,71,.12);color:var(--acc);}
+.sh-barl{font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);}
+.sh-tag{font-size:.52rem;font-weight:700;padding:2px 7px;border-radius:9px;flex-shrink:0;letter-spacing:.03em;}
+.sh-t-mine{background:#2e7d4f;color:#fff;}
+.sh-t-idea{background:#d99a1e;color:#111;}
+.sh-t-none{background:#3a3a44;color:#b0b0bb;}
+.pt.tsel{border-color:var(--blue);background:rgba(74,144,217,.14);}
+.pt.skip{opacity:.5;}
+.sh-tile .pt-del{position:static;transform:none;display:block;padding:6px 8px;}
+.sh-use{font-size:.75rem;padding:6px 8px;border:1px solid var(--bdr);border-radius:4px;color:var(--grn);flex-shrink:0;}
+.shelf{max-height:260px;}
+.sh-det{border:1px solid var(--bdr);border-radius:7px;padding:8px 10px;background:var(--surf);}
+.sh-det summary{cursor:pointer;font-size:.68rem;color:var(--acc);min-height:28px;display:flex;align-items:center;}
+.sh-ovbody{display:flex;flex-direction:column;gap:9px;margin-top:9px;}
+.sh-ovh{font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--acc);margin-top:4px;}
+.sh-prevrow{display:flex;gap:8px;flex-wrap:wrap;}
+.sh-prevrow canvas{width:140px;height:auto;border:1px solid var(--bdr);border-radius:4px;display:block;}
+.sh-prevrow div{font-size:.55rem;color:var(--muted);text-align:center;}
+.sh-ovbody input[type=color]{width:44px;height:30px;padding:0;border:1px solid var(--bdr);background:transparent;}
+.sh-ovbody select{background:var(--bg);color:var(--txt);border:1px solid var(--bdr);border-radius:5px;padding:6px;font-size:.66rem;}
+.sh-resbar{display:flex;flex-direction:column;gap:9px;padding:11px;border:1px solid var(--bdr);border-radius:8px;background:var(--surf);}
+.sh-rstat{font-size:.62rem;color:var(--acc);min-height:1em;}
+.vc{position:relative;}
+.sh-rtile.rsel{outline:2px solid var(--blue);outline-offset:-2px;}
+.sh-rtile.busy{opacity:.6;}
+.sh-rtop{position:absolute;top:5px;left:5px;right:5px;display:flex;justify-content:space-between;align-items:center;z-index:2;pointer-events:none;}
+.sh-rsel{pointer-events:auto;width:28px;height:28px;border-radius:5px;border:2px solid #fff;background:rgba(0,0,0,.55);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.85rem;cursor:pointer;}
+.sh-rtile.rsel .sh-rsel{background:var(--blue);}
+.sh-clr{display:flex;align-items:center;gap:6px;font-size:.6rem;color:var(--muted);cursor:pointer;}
+@media(hover:none){.pt-del{display:block;}}
 </style>
 </head>
 <body>
