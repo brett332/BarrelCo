@@ -2174,20 +2174,20 @@ document.addEventListener('drop',function(e){e.preventDefault();});
 <div class="main">
 <div class="sb">
 
-  <!-- Upload -->
+  <!-- Products (per-product upload boxes) -->
   <div>
-    <div class="slbl">Upload Photos / Videos</div>
-    <div class="uz" id="uz">
-      <input type="file" id="fi" accept="image/*,video/*" multiple onchange="handleFiles(this.files);this.value=''">
-      <div class="uz-ico">📁</div>
-      <div class="uz-txt"><strong>Drop files or click to browse</strong>JPG PNG WEBP MP4 MOV</div>
+    <div class="slbl">Products — pick one or more</div>
+    <div class="ps2-chips" id="psProds"></div>
+    <div class="alr">
+      <input type="text" class="ali" id="psCustomProd" placeholder="Custom product name…" onkeydown="if(event.key==='Enter')psAddCustomProd()">
+      <button class="alb" onclick="psAddCustomProd()">+ Add</button>
     </div>
   </div>
 
-  <!-- Shelf -->
+  <!-- One upload box + shelf per selected product (built by psRenderBoxes) -->
   <div>
-    <div class="slbl">Files (<span id="fc">0</span>) — click to toggle</div>
-    <div class="shelf" id="shelf"></div>
+    <div class="slbl">Upload Photos / Videos — one box per product</div>
+    <div id="psBoxes"></div>
   </div>
 
   <!-- Transforms -->
