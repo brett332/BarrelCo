@@ -2378,7 +2378,7 @@ function shVideoCore(file,cfg){
         v.onended=function(){
           if(stopped)return;
           draw();
-          setTimeout(function(){try{if(rec.state!=='inactive')rec.stop();}catch(e){fail('Recorder stop failed');}},200);
+          setTimeout(function(){try{if(rec.state!=='inactive')rec.stop();if(rec2&&rec2.state!=='inactive')rec2.stop();}catch(e){fail('Recorder stop failed');}},200);
         };
         timer=setTimeout(function(){fail('Timed out re-encoding this clip');},dur*2000+30000);
         rec.start(1000);
