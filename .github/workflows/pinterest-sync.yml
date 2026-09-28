@@ -1,0 +1,36 @@
+name: pinterest-sync
+
+# Every Sunday ~9am US Eastern (13:00 UTC in summer, 14:00 in winter is fine too),
+# plus a manual "Run workflow" button in the Actions tab.
+on:
+  schedule:
+    - cron: "0 13 * * 0"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Sync every board, in batches, until nothing is left
+        env:
+          SYNC_URL: ${{ secrets.SYNC_URL }}
+          SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+        run: |
+          set -euo pipefail
+          AUTH="Authorization: Bearer $SYNC_TOKEN"
+          BOARDS=$(curl -fsS -H "$AUTH" "$SYNC_URL/boards" | jq -r '.boards[]')
+          FAILED=0
+          for b in $BOARDS; do
+            for i in $(seq 1 20); do
+              R=$(curl -sS --max-time 120 -X POST -H "$AUTH" "$SYNC_URL/sync?board=$b") || { echo "::error::request failed for $b"; FAILED=1; break; }
+              echo "$b (pass $i): $R" | tr -d '\n'; echo
+              if echo "$R" | jq -e '.error' >/dev/null 2>&1; then echo "::error::$b returned an error"; FAILED=1; break; fi
+              if [ "$(echo "$R" | jq '.failed | length')" != "0" ]; then echo "::error::$b had failed pins"; FAILED=1; fi
+              REM=$(echo "$R" | jq -r '.remaining')
+              UP=$(echo "$R" | jq -r '.uploaded')
+              [ "$REM" = "0" ] && break
+              [ "$UP" = "0" ] && { echo "::error::$b made no progress"; FAILED=1; break; }
+            done
+          done
+          exit $FAILED
