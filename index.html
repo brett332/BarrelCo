@@ -2339,7 +2339,7 @@ function shVideoCore(file,cfg){
           var src=actx.createMediaElementSource(v), dst=actx.createMediaStreamDestination();
           src.connect(dst);
           if(actx.state==='suspended')actx.resume().catch(function(){});
-          dst.stream.getAudioTracks().forEach(function(t){stream.addTrack(t);});
+          dst.stream.getAudioTracks().forEach(function(t){stream.addTrack(t);if(stream2)stream2.addTrack(t);});
         }catch(ae){warn='audio not carried over ('+ae.message+')';}
         var bps=Math.max(2500000,Math.min(10000000,Math.round(cw*ch*30*0.07)));
         var opts={mimeType:pick.mime,videoBitsPerSecond:bps};
