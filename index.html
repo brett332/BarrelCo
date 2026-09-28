@@ -2291,6 +2291,7 @@ function psLoadLocsForVenture(){
   }
   var locs=saved?JSON.parse(saved):(CURRENT_VENTURE==='barrelco'?DEFAULT_LOCS:[]);
   locs.forEach(function(l){addLocToList(l,true);});
+  if(typeof psLoadProductsForVenture==='function') psLoadProductsForVenture();
   updPrev();
   if(typeof ssUpdBtn==='function') ssUpdBtn();
 }
