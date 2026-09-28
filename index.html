@@ -2382,6 +2382,7 @@ function shVideoCore(file,cfg){
         };
         timer=setTimeout(function(){fail('Timed out re-encoding this clip');},dur*2000+30000);
         rec.start(1000);
+        if(rec2)rec2.start(1000);
         var startPlay=function(){return v.play();};
         startPlay().catch(function(){
           v.muted=true;warn='audio dropped (browser blocked unmuted playback)';
