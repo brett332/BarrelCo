@@ -2220,6 +2220,13 @@ document.addEventListener('drop',function(e){e.preventDefault();});
   <!-- One upload box + shelf per selected product (built by psRenderBoxes) -->
   <div>
     <div class="slbl">Upload Photos / Videos — one box per product</div>
+    <div class="sh-imp" id="shImp">
+      <span class="sh-barl">Tag new uploads as</span>
+      <button type="button" class="sh-imp-b act" data-imp="none">None</button>
+      <button type="button" class="sh-imp-b" data-imp="mine">Mine</button>
+      <button type="button" class="sh-imp-b" data-imp="idea">Idea</button>
+    </div>
+    <div class="sh-hint" style="margin:4px 0 8px;">Mine = gets your watermark · Idea = gets the project-idea banner · None = untouched. Everything you drop in next gets this tag; change any of them later with the boxes' Tag selected buttons.</div>
     <div id="psBoxes"></div>
   </div>
 
