@@ -2347,13 +2347,27 @@ function shVideoCore(file,cfg){
         rec=new MediaRecorder(stream,opts);
         rec.ondataavailable=function(e){if(e.data&&e.data.size)chunks.push(e.data);};
         rec.onerror=function(e){fail('Recorder error: '+((e.error&&e.error.message)||'unknown'));};
-        rec.onstop=function(){
-          if(settled)return;
-          var blob=new Blob(chunks,{type:pick.mime.split(';')[0]});
+        var finish=function(){
+          if(settled||!stop1||!stop2)return;
+          var type=pick.mime.split(';')[0];
+          var blob=new Blob(chunks,{type:type});
           if(blob.size<1000)return fail('Encoder produced an empty file');
+          var ovBlob=null;
+          if(rec2){
+            ovBlob=new Blob(chunks2,{type:type});
+            if(ovBlob.size<1000)return fail('Encoder produced an empty overlay file');
+          }
           settled=true;cleanup();
-          resolve({blob:blob,ext:pick.ext,dur:dur,warn:warn});
+          resolve({blob:blob,ovBlob:ovBlob,ext:pick.ext,dur:dur,warn:warn});
         };
+        rec.onstop=function(){stop1=true;finish();};
+        if(stream2){
+          stop2=false;
+          rec2=new MediaRecorder(stream2,opts);
+          rec2.ondataavailable=function(e){if(e.data&&e.data.size)chunks2.push(e.data);};
+          rec2.onerror=function(e){fail('Recorder error: '+((e.error&&e.error.message)||'unknown'));};
+          rec2.onstop=function(){stop2=true;finish();};
+        }
         // frame pump
         var pump=function(){
           if(stopped)return;
