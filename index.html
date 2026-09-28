@@ -1998,6 +1998,8 @@ function psLoadProductsForVenture(){
   psSel=[];
   try{psCustom=JSON.parse(localStorage.getItem('ps_prods_custom_'+CURRENT_VENTURE)||'[]');}catch(e){psCustom=[];}
   if(!Array.isArray(psCustom))psCustom=[];
+  var firstP=psProdList()[0];
+  psSel=firstP?[firstP.key]:[];
   psRenderProducts();
 }
 function psSaveCustom(){try{localStorage.setItem('ps_prods_custom_'+CURRENT_VENTURE,JSON.stringify(psCustom));}catch(e){}}
