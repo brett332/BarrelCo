@@ -2549,104 +2549,283 @@ function randName(ext){
   return 'img_'+a+b+c+'.'+(ext||'jpg');
 }
 
+// ── VIDEO RE-ENCODE (client-side: <video> -> canvas -> MediaRecorder) ───────
+// Every output is a genuine re-encode with its own random flip / micro-rotation / zoom / colour shift.
+// Runs in REAL TIME (a 30s clip takes ~30s) and the tab must stay open and visible.
+function psPickVideoMime(){
+  if(typeof MediaRecorder==='undefined'||!MediaRecorder.isTypeSupported)return null;
+  var c=['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4;codecs=avc1,mp4a.40.2','video/mp4;codecs=avc1','video/mp4',
+         'video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
+  for(var i=0;i<c.length;i++){
+    var ok=false;try{ok=MediaRecorder.isTypeSupported(c[i]);}catch(e){}
+    if(ok)return {mime:c[i],ext:c[i].indexOf('video/mp4')===0?'mp4':'webm'};
+  }
+  return null;
+}
+// Same variation formulas/floors as shiftImage (kept separate so shiftImage stays untouched for ListingForge)
+function psVariation(){
+  var g=function(id){return document.getElementById(id).checked;};
+  var intensity=parseInt(document.getElementById('intensity').value)/100;
+  var dir=Math.random()>0.5?1:-1;
+  return {
+    flip:g('tFlip')?(Math.random()>0.5?-1:1):1,
+    angle:(g('tRotate')?(0.4+Math.random()*2.5*intensity):(0.4+Math.random()*0.4))*dir,
+    zoom:g('tCrop')?(1+0.02+Math.random()*0.08*intensity*2):(1+0.01+Math.random()*0.01),
+    bright:g('tBright')?(0.88+Math.random()*0.24*intensity*2):(1+(Math.random()>0.5?0.02:-0.02)+Math.random()*0.01),
+    contrast:g('tContrast')?(0.9+Math.random()*0.2*intensity*2):(1+(Math.random()>0.5?0.015:-0.015)),
+    sat:g('tSat')?(0.85+Math.random()*0.3*intensity*2):(1+(Math.random()>0.5?0.02:-0.02))
+  };
+}
+// Resolves {blob,ext,dur,warn} or rejects with Error. onProg(fraction,durationSec) is called during playback.
+function psShiftVideo(file,onProg){
+  return new Promise(function(resolve,reject){
+    var pick=psPickVideoMime();
+    if(!pick)return reject(new Error('This browser cannot re-encode video (MediaRecorder unavailable)'));
+    var url=URL.createObjectURL(file), v=document.createElement('video');
+    var settled=false, rec=null, actx=null, timer=null, stopped=false, chunks=[], dur=0, warn='';
+    v.preload='auto';v.playsInline=true;
+    v.style.cssText='position:fixed;left:-9999px;top:0;width:2px;height:2px;opacity:0;pointer-events:none;';
+    document.body.appendChild(v);
+    function cleanup(){
+      stopped=true;clearTimeout(timer);
+      try{if(rec&&rec.state!=='inactive')rec.stop();}catch(e){}
+      try{if(actx)actx.close();}catch(e){}
+      try{v.pause();v.removeAttribute('src');v.load();v.remove();}catch(e){}
+      URL.revokeObjectURL(url);
+    }
+    function fail(msg){if(settled)return;settled=true;cleanup();reject(new Error(msg));}
+    v.onerror=function(){fail('Video could not be decoded ('+((v.error&&v.error.message)||'unsupported or corrupt file')+')');};
+    v.onloadedmetadata=function(){
+      try{
+        dur=v.duration;
+        if(!isFinite(dur)||dur<=0)return fail('Video has no readable duration');
+        if(dur>PS_MAX_CLIP_SEC)return fail('Clip is longer than '+Math.round(PS_MAX_CLIP_SEC/60)+' min — split it first');
+        // Chrome applies rotation metadata: videoWidth/Height are the DISPLAYED (already-rotated) size.
+        var W=v.videoWidth,H=v.videoHeight;
+        if(!W||!H)return fail('Video has no picture track');
+        var sc=Math.min(1,1920/Math.max(W,H));
+        var cw=Math.max(2,Math.round(W*sc/2)*2), ch=Math.max(2,Math.round(H*sc/2)*2);
+        var canvas=document.createElement('canvas');canvas.width=cw;canvas.height=ch;
+        var ctx=canvas.getContext('2d');
+        var p=psVariation(), ang=p.angle*Math.PI/180;
+        // enlarge zoom just enough that the rotated frame still covers the canvas (no black corners)
+        var cover=Math.cos(Math.abs(ang))+Math.sin(Math.abs(ang))*Math.max(cw/ch,ch/cw);
+        var zoom=Math.max(p.zoom,cover*1.002);
+        var filt='brightness('+p.bright+') contrast('+p.contrast+') saturate('+p.sat+')';
+        var draw=function(){
+          ctx.save();ctx.filter=filt;
+          ctx.translate(cw/2,ch/2);ctx.scale(p.flip*zoom,zoom);ctx.rotate(ang);
+          ctx.drawImage(v,-cw/2,-ch/2,cw,ch);ctx.restore();
+        };
+        draw();
+        var stream=canvas.captureStream(30);
+        // Audio: route the element's sound into a MediaStream (silent to speakers) and record it with the picture.
+        try{
+          var AC=window.AudioContext||window.webkitAudioContext;
+          actx=new AC();
+          var src=actx.createMediaElementSource(v), dst=actx.createMediaStreamDestination();
+          src.connect(dst);
+          if(actx.state==='suspended')actx.resume().catch(function(){});
+          dst.stream.getAudioTracks().forEach(function(t){stream.addTrack(t);});
+        }catch(ae){warn='audio not carried over ('+ae.message+')';}
+        var bps=Math.max(2500000,Math.min(10000000,Math.round(cw*ch*30*0.07)));
+        var opts={mimeType:pick.mime,videoBitsPerSecond:bps};
+        if(stream.getAudioTracks().length)opts.audioBitsPerSecond=128000;
+        rec=new MediaRecorder(stream,opts);
+        rec.ondataavailable=function(e){if(e.data&&e.data.size)chunks.push(e.data);};
+        rec.onerror=function(e){fail('Recorder error: '+((e.error&&e.error.message)||'unknown'));};
+        rec.onstop=function(){
+          if(settled)return;
+          var blob=new Blob(chunks,{type:pick.mime.split(';')[0]});
+          if(blob.size<1000)return fail('Encoder produced an empty file');
+          settled=true;cleanup();
+          resolve({blob:blob,ext:pick.ext,dur:dur,warn:warn});
+        };
+        // frame pump
+        var pump=function(){
+          if(stopped)return;
+          draw();
+          try{if(onProg)onProg(Math.min(1,v.currentTime/dur),dur);}catch(e){}
+          if(v.requestVideoFrameCallback)v.requestVideoFrameCallback(pump);else requestAnimationFrame(pump);
+        };
+        v.onended=function(){
+          if(stopped)return;
+          draw();
+          setTimeout(function(){try{if(rec.state!=='inactive')rec.stop();}catch(e){fail('Recorder stop failed');}},200);
+        };
+        timer=setTimeout(function(){fail('Timed out re-encoding this clip');},dur*2000+30000);
+        rec.start(1000);
+        var startPlay=function(){return v.play();};
+        startPlay().catch(function(){
+          v.muted=true;warn='audio dropped (browser blocked unmuted playback)';
+          return v.play();
+        }).then(function(){pump();}).catch(function(e){fail('Could not play the clip ('+e.message+')');});
+      }catch(err){fail('Video setup failed: '+err.message);}
+    };
+    v.src=url;
+  });
+}
+
+// ── IMAGE SAFETY (shiftImage has no error path — a corrupt file would never resolve) ─
+var psImgOk={};
+function psValidateImage(f){
+  if(!psImgOk[f.id]){
+    psImgOk[f.id]=new Promise(function(resolve,reject){
+      var im=new Image();
+      im.onload=function(){resolve(true);};
+      im.onerror=function(){reject(new Error('Image could not be decoded (corrupt or unsupported)'));};
+      im.src=f.url;
+    });
+  }
+  return psImgOk[f.id];
+}
+function psWithTimeout(p,ms,msg){
+  return new Promise(function(res,rej){
+    var t=setTimeout(function(){rej(new Error(msg));},ms);
+    p.then(function(v){clearTimeout(t);res(v);},function(e){clearTimeout(t);rej(e);});
+  });
+}
 function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
 
+// ── FILENAMES — random per output, date prefix, unique across the whole run ─
+function psUniqueName(kind,ext,used){
+  var date=(document.getElementById('sDate').value||'').replace(/[^A-Za-z0-9_-]/g,'');
+  var n;
+  do{ n=(date?date+'_':'')+randName(ext).replace(/^img_/,kind+'_'); }while(used[n]);
+  used[n]=1;return n;
+}
+
 // ── GENERATE ───────────────────────────────────────────────────────────────
-function generate(){
+async function generate(){
+  if(psBusy)return;
   var btn=document.getElementById('ps-gb');
-  btn.disabled=true;
-  var toProc=files.filter(function(f){return selIds.has(f.id);});
   var locs=getChkLocs();
-  results=[];
+  var groups=[], usedFolders={};
+  psSel.forEach(function(k){
+    var p=psProdByKey(k), srcs=psSelectedFor(k);
+    if(!p||!srcs.length)return;
+    locs.forEach(function(loc){
+      var folder=psFolderName(p.name,loc), base=folder, n=2;
+      while(usedFolders[folder.toLowerCase()])folder=base+' ('+(n++)+')';
+      usedFolders[folder.toLowerCase()]=1;
+      groups.push({prod:p,loc:loc,folder:folder,srcs:srcs,items:[]});
+    });
+  });
+  if(!groups.length)return;
+  // guard for long/large clips (video is re-encoded in real time)
+  var vidSec=0,bigClip=false;
+  groups.forEach(function(g){g.srcs.forEach(function(f){if(f.isVid){vidSec+=(isFinite(f.dur)?f.dur:30)*varCount;if(f.dur>PS_WARN_CLIP_SEC||f.file.size/1048576>PS_WARN_CLIP_MB)bigClip=true;}});});
+  if(vidSec>300||bigClip){
+    var ok=confirm('Video is re-encoded in real time: about '+Math.ceil(vidSec/60)+' min of processing for this run'+(bigClip?' (includes a long/large clip)':'')+'.\n\nKeep this tab open and visible until it finishes. Continue?');
+    if(!ok)return;
+  }
+  psBusy=true;btn.disabled=true;
+  results=[];psImgOk={};
   var pw=document.getElementById('ps-pw'),pf=document.getElementById('ps-pf'),pl=document.getElementById('ps-pl');
   pw.classList.add('act');
   document.getElementById('ps-es').style.display='none';
   document.getElementById('ps-ra').innerHTML='';
-  var total=locs.length*toProc.length*varCount, done=0;
-  var work=Promise.resolve();
-  locs.forEach(function(loc){
-    var locItems=[];
-    toProc.forEach(function(f){
-      for(var i=0;i<varCount;i++){
-        (function(srcFile){
-          work=work.then(function(){
-            pl.textContent=loc+' — '+srcFile.name;
-            pf.style.width=(done/total*100)+'%';
-            if(srcFile.isVid){
-              locItems.push({blob:srcFile.file,ext:srcFile.name.split('.').pop(),isVid:true});
-              done++;return sleep(10);
-            }else{
-              return shiftImage(srcFile.file).then(function(res){
-                locItems.push({blob:res.blob,ext:res.ext,isVid:false});
-                done++;
-              });
-            }
-          });
-        })(f);
+  var total=0;groups.forEach(function(g){total+=g.srcs.length*varCount;});
+  var done=0, usedNames={};
+  for(var gi=0;gi<groups.length;gi++){
+    var g=groups[gi];
+    for(var si=0;si<g.srcs.length;si++){
+      var f=g.srcs[si];
+      for(var vi=0;vi<varCount;vi++){
+        var label=g.folder+' — '+f.name+(varCount>1?' (v'+(vi+1)+'/'+varCount+')':'');
+        pl.textContent=label;pf.style.width=(done/total*100)+'%';
+        try{
+          var item;
+          if(f.isVid){
+            var res=await psShiftVideo(f.file,(function(lbl,d0){return function(frac,dur){
+              pf.style.width=((d0+frac)/total*100)+'%';
+              pl.textContent=lbl+' — video '+Math.round(frac*100)+'% · ~'+Math.max(0,Math.ceil((1-frac)*dur))+'s left';
+            };})(label,done));
+            item={blob:res.blob,ext:res.ext,isVid:true,dur:res.dur,warn:res.warn,srcName:f.name,fname:psUniqueName('vid',res.ext,usedNames)};
+          }else{
+            await psValidateImage(f);
+            var ir=await psWithTimeout(shiftImage(f.file),60000,'Image processing timed out');
+            if(!ir||!ir.blob)throw new Error('Could not encode image');
+            item={blob:ir.blob,ext:ir.ext,isVid:false,srcName:f.name,fname:psUniqueName('img',ir.ext,usedNames)};
+          }
+        }catch(err){
+          item={error:(err&&err.message)||String(err),isVid:f.isVid,srcName:f.name};
+          if(typeof logDebug==='function'){try{logDebug('PhotoShift failed: '+g.folder+' / '+f.name+' — '+item.error);}catch(e){}}
+        }
+        g.items.push(item);
+        done++;
       }
-    });
-    work=work.then(function(){results.push({loc:loc,items:locItems.slice()});locItems=[];});
-  });
-  work.then(function(){
-    pf.style.width='100%';pl.textContent='Done ✓';
-    setTimeout(function(){pw.classList.remove('act');},1000);
-    renderResults();btn.disabled=false;
-  });
+    }
+    results.push({prod:g.prod,loc:g.loc,folder:g.folder,items:g.items});
+  }
+  pf.style.width='100%';pl.textContent='Done ✓';
+  setTimeout(function(){pw.classList.remove('act');},1000);
+  psBusy=false;
+  renderResults();ssUpdBtn();
 }
 
 // ── RENDER ─────────────────────────────────────────────────────────────────
 function renderResults(){
   var area=document.getElementById('ps-ra');
-  var date=document.getElementById('sDate').value||'DATE';
-  var prod=(document.getElementById('sProd').value||'Photos').trim();
-  var fb=date+'_'+prod;
+  psUrls.forEach(function(u){try{URL.revokeObjectURL(u);}catch(e){}});psUrls=[];
   area.innerHTML='';
-  var total=results.reduce(function(n,r){return n+r.items.length;},0);
+  var total=0,failed=0;
+  results.forEach(function(r){r.items.forEach(function(it){if(it.error)failed++;else total++;});});
   var hdr=document.createElement('div');hdr.className='rh';
-  hdr.innerHTML='<div><div class="rt">Generated</div><div class="rm">'+results.length+' locations · '+total+' files</div></div>';
+  hdr.innerHTML='<div><div class="rt">Generated</div><div class="rm">'+results.length+' folders · '+total+' files'+(failed?' · <span style="color:var(--red)">'+failed+' failed</span>':'')+'</div></div>';
   var sfb=document.createElement('button');sfb.className='sfb';sfb.textContent='📁 Save All to Folder';
-  sfb.onclick=function(){saveAll(fb);};
+  sfb.onclick=function(){saveAll();};
   hdr.appendChild(sfb);area.appendChild(hdr);
   results.forEach(function(r){
-    var sec=document.createElement('div');sec.className='ls';
-    var st=document.createElement('div');st.className='lst';st.textContent=fb+' / '+r.loc+' ('+r.items.length+' files)';
+    var sec=document.createElement('div');sec.className='ls ps2-group';sec.dataset.folder=r.folder;
+    var ok=r.items.filter(function(i){return !i.error;}).length;
+    var st=document.createElement('div');st.className='lst';st.textContent=r.folder+' ('+ok+' files'+(ok!==r.items.length?', '+(r.items.length-ok)+' failed':'')+')';
     sec.appendChild(st);
     var grid=document.createElement('div');grid.className='vg';
     r.items.forEach(function(item,i){
-      var card=document.createElement('div');card.className='vc';
-      if(item.isVid){card.innerHTML='<div class="vc-vid">🎬</div><div class="vcf"><span class="vcn">'+r.loc+' v'+(i+1)+'</span><button class="dlb">Save</button></div>';}
-      else{var u=URL.createObjectURL(item.blob);card.innerHTML='<img src="'+u+'" alt=""><div class="vcf"><span class="vcn">'+r.loc+' v'+(i+1)+'</span><button class="dlb">Save</button></div>';}
-      card.querySelector('.dlb').addEventListener('click',function(){triggerDL(item.blob,randName(item.ext));});
+      var card=document.createElement('div');card.className='vc'+(item.error?' ps2-errc':'');
+      if(item.error){
+        card.innerHTML='<div class="ps2-err">⚠ '+(item.isVid?'Video':'Photo')+' failed<br><b>'+psEsc(item.srcName)+'</b><br>'+psEsc(item.error)+'</div>';
+      }else{
+        var u=URL.createObjectURL(item.blob);psUrls.push(u);
+        var media=item.isVid?'<video class="ps2-vid" src="'+u+'" controls playsinline preload="metadata"></video>':'<img src="'+u+'" alt="">';
+        card.innerHTML=media+'<div class="vcf"><span class="vcn">v'+(i+1)+' · '+psEsc(item.ext)+(item.warn?' ⚠':'')+'</span><button class="dlb">Save</button></div>';
+        if(item.warn)card.title=item.warn;
+        card.querySelector('.dlb').addEventListener('click',function(){triggerDL(item.blob,psFlatName(r,item));});
+      }
       grid.appendChild(card);
     });
     sec.appendChild(grid);area.appendChild(sec);
   });
 }
+// flat-download filename carries product+location so files from different combos never collide
+function psFlatName(r,item){return (r.folder+' - '+item.fname).replace(/[\/\\:*?"<>|]/g,'');}
 
 // ── SAVE TO FOLDER (File System Access API) ────────────────────────────────
-async function saveAll(fb){
-  if(!window.showDirectoryPicker){
-    for(var r of results)for(var i=0;i<r.items.length;i++){triggerDL(r.items[i].blob,randName(r.items[i].ext));await sleep(150);}
-    return;
-  }
+// Tree written:  <chosen root> / <Product Location> / <Date>_img_xxxxx.jpg | <Date>_vid_xxxxx.mp4
+async function saveAll(){
+  var flat=async function(){
+    for(var r of results)for(var i=0;i<r.items.length;i++){if(r.items[i].error)continue;triggerDL(r.items[i].blob,psFlatName(r,r.items[i]));await sleep(150);}
+  };
+  if(!window.showDirectoryPicker){await flat();return;}
   try{
     var root=await window.showDirectoryPicker({mode:'readwrite'});
-    var sessDir=await root.getDirectoryHandle(fb,{create:true});
+    var saved=0,bad=0;
     for(var r of results){
-      var locDir=await sessDir.getDirectoryHandle(r.loc,{create:true});
+      var dir=await root.getDirectoryHandle(r.folder,{create:true});
       for(var i=0;i<r.items.length;i++){
         var item=r.items[i];
-        var fname=randName(item.ext);
-        var fh=await locDir.getFileHandle(fname,{create:true});
-        var wr=await fh.createWritable();
-        await wr.write(item.blob);await wr.close();
+        if(item.error)continue;
+        try{
+          var fh=await dir.getFileHandle(item.fname,{create:true});
+          var wr=await fh.createWritable();
+          await wr.write(item.blob);await wr.close();saved++;
+        }catch(we){bad++;}
       }
     }
-    alert('Saved to folder: '+fb);
+    alert('Saved '+saved+' file'+(saved===1?'':'s')+' into '+results.length+' folder'+(results.length===1?'':'s')+' under "'+(root.name||'chosen folder')+'"'+(bad?' ('+bad+' failed to write)':''));
   }catch(err){
-    if(err.name!=='AbortError'){
-      for(var r of results)for(var i=0;i<r.items.length;i++){triggerDL(r.items[i].blob,randName(r.items[i].ext));await sleep(150);}
-    }
+    if(err.name!=='AbortError')await flat();
   }
 }
 
