@@ -1989,8 +1989,8 @@ var DEFAULT_LOCS=['Baltimore_N','Baltimore_S','Baltimore_E','Baltimore_W','Balti
 function psEsc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function psSlug(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');}
 function psProdList(){
-  var list=(PRODUCTS||[]).map(function(p){return {key:CURRENT_VENTURE+':'+p.id,name:p.name,code:p.code||'',custom:false};});
-  psCustom.forEach(function(n){list.push({key:CURRENT_VENTURE+':c:'+psSlug(n),name:n,code:'',custom:true});});
+  var list=(PRODUCTS||[]).map(function(p){return {key:CURRENT_VENTURE+':'+p.id,name:p.name,code:p.code||'',custom:false,prod:p};});
+  psCustom.forEach(function(n){list.push({key:CURRENT_VENTURE+':c:'+psSlug(n),name:n,code:'',custom:true,prod:null});});
   return list;
 }
 function psProdByKey(k){return psProdList().filter(function(p){return p.key===k;})[0]||null;}
