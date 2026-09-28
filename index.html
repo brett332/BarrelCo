@@ -2095,20 +2095,55 @@ function renderShelf(key){
   if(!box)return;
   var list=psFiles[key]||[];
   box.querySelector('.ps2-fc').textContent=list.length;
+  var bar=box.querySelector('.sh-bar');
+  if(bar){
+    var nSel=list.filter(function(f){return shTagSel.has(f.id);}).length;
+    bar.style.display=list.length?'':'none';
+    bar.innerHTML='<span class="sh-barl">Select</span><button type="button" data-act="all">All</button><button type="button" data-act="clear">Clear</button>'
+      +'<span class="sh-barl">Tag selected ('+nSel+')</span>'
+      +'<button type="button" data-act="tag" data-tag="mine">Mine</button><button type="button" data-act="tag" data-tag="idea">Idea</button><button type="button" data-act="tag" data-tag="none">None</button>';
+    bar.onclick=function(e){
+      var b=e.target.closest('button');if(!b)return;
+      var cur=psFiles[key]||[],act=b.dataset.act;
+      if(act==='all')cur.forEach(function(f){shTagSel.add(f.id);});
+      else if(act==='clear')cur.forEach(function(f){shTagSel.delete(f.id);});
+      else if(act==='tag')cur.forEach(function(f){if(shTagSel.has(f.id))f.tag=b.dataset.tag;});
+      renderShelf(key);
+    };
+  }
   var s=box.querySelector('.ps2-shelf');
   s.innerHTML='';
   list.forEach(function(f){
     var d=document.createElement('div');
-    d.className='pt'+(selIds.has(f.id)?' sel':'');
+    var tg=f.tag||'none';
+    d.className='pt sh-tile'+(shTagSel.has(f.id)?' tsel':'')+(selIds.has(f.id)?'':' skip');
+    d.dataset.id=f.id;
     var meta='photo';
     if(f.isVid){
       var mb=f.file.size/1048576;
       meta='video '+psFmtDur(f.dur)+' · '+mb.toFixed(1)+'MB';
       if(f.dur>PS_WARN_CLIP_SEC||mb>PS_WARN_CLIP_MB)meta+=' ⚠ long/large — slow to re-encode';
     }
-    d.innerHTML=(f.isVid?'<div class="vt">🎬</div>':'<img src="'+f.url+'" alt="">')+'<div style="flex:1;min-width:0"><div class="pt-name">'+psEsc(f.name)+'</div><div class="pt-meta">'+psEsc(meta)+'</div></div><span class="pt-del">✕</span>';
-    d.querySelector('.pt-del').addEventListener('click',function(e){e.stopPropagation();psFiles[key]=psFiles[key].filter(function(x){return x.id!==f.id;});selIds.delete(f.id);renderShelf(key);ssUpdBtn();});
-    d.addEventListener('click',function(e){if(e.target.classList.contains('pt-del'))return;selIds.has(f.id)?selIds.delete(f.id):selIds.add(f.id);d.classList.toggle('sel');ssUpdBtn();});
+    d.innerHTML=(f.isVid?'<div class="vt">🎬</div>':'<img src="'+f.url+'" alt="">')+'<div style="flex:1;min-width:0"><div class="pt-name">'+psEsc(f.name)+'</div><div class="pt-meta">'+psEsc(meta)+'</div></div>'
+      +'<span class="sh-tag sh-t-'+tg+'">'+SH_TAGNAME[tg]+'</span>'
+      +'<span class="sh-use" title="Include in the run (tap to skip this file)">'+(selIds.has(f.id)?'✓':'○')+'</span><span class="pt-del">✕</span>';
+    d.querySelector('.pt-del').addEventListener('click',function(e){
+      e.stopPropagation();
+      psFiles[key]=psFiles[key].filter(function(x){return x.id!==f.id;});
+      selIds.delete(f.id);shTagSel.delete(f.id);delete psImgOk[f.id];
+      try{URL.revokeObjectURL(f.url);}catch(er){}
+      renderShelf(key);ssUpdBtn();
+    });
+    d.querySelector('.sh-use').addEventListener('click',function(e){
+      e.stopPropagation();
+      if(selIds.has(f.id))selIds.delete(f.id);else selIds.add(f.id);
+      renderShelf(key);ssUpdBtn();
+    });
+    d.addEventListener('click',function(e){
+      if(e.target.closest('.pt-del')||e.target.closest('.sh-use'))return;
+      if(shTagSel.has(f.id))shTagSel.delete(f.id);else shTagSel.add(f.id);
+      renderShelf(key);
+    });
     s.appendChild(d);
   });
 }
