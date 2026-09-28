@@ -1,0 +1,14 @@
+# pinterest-sync — Pinterest boards -> Google Drive folders.
+# Separate Worker from barrel-co; deployed via Cloudflare Workers Builds
+# with root directory "pinterest-sync". keep_vars preserves dashboard secrets.
+# No cron trigger on purpose (account is at its cron limit); a weekly GitHub
+# Actions workflow calls this Worker instead.
+name = "pinterest-sync"
+main = "worker.js"
+compatibility_date = "2026-06-08"
+keep_vars = true
+workers_dev = true
+
+[[kv_namespaces]]
+binding = "SEEN"
+id = "ba52295039a6498bb84c29306259fd4e"
