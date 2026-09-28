@@ -4421,6 +4421,7 @@ function bcNav(app) {
   if (app === 'wishlist') { syncWishesFromSheet(); }
   if (app === 'debug')    { renderDebugLog(); }
   if (app === 'stockshift') { if(typeof renderHistory==='function') renderHistory(); }
+  if ((app === 'listingforge' || app === 'photoshift') && typeof shMountSetup==='function') { shMountSetup(app); }
 }
 
 function syncWishesFromSheet(){
