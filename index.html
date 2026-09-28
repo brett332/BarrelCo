@@ -1521,7 +1521,6 @@ function switchVenture(ventureId){
   LOCATIONS = VENTURES[CURRENT_VENTURE].locations;
   DEFAULT_LOC_SETTINGS = VENTURES[CURRENT_VENTURE].locSettings;
   usedDimIdx = {};
-  renderVentureUI();
   renderVentureSwitcher();
   var empty=document.getElementById('emptyState');
   if(empty) empty.style.display='';
