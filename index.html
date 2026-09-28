@@ -2315,18 +2315,23 @@ function shVideoCore(file,cfg){
         var cw=Math.max(2,Math.round(W*sc/2)*2), ch=Math.max(2,Math.round(H*sc/2)*2);
         var canvas=document.createElement('canvas');canvas.width=cw;canvas.height=ch;
         var ctx=canvas.getContext('2d');
-        var p=psVariation(), ang=p.angle*Math.PI/180;
+        var p=cfg.ident?{flip:1,angle:0,zoom:1,bright:1,contrast:1,sat:1}:psVariation(), ang=p.angle*Math.PI/180;
         // enlarge zoom just enough that the rotated frame still covers the canvas (no black corners)
         var cover=Math.cos(Math.abs(ang))+Math.sin(Math.abs(ang))*Math.max(cw/ch,ch/cw);
-        var zoom=Math.max(p.zoom,cover*1.002);
-        var filt='brightness('+p.bright+') contrast('+p.contrast+') saturate('+p.sat+')';
+        var zoom=cfg.ident?1:Math.max(p.zoom,cover*1.002);
+        var filt=cfg.ident?'none':'brightness('+p.bright+') contrast('+p.contrast+') saturate('+p.sat+')';
+        // Overlay (watermark / idea banner) is drawn AFTER the transforms, in the un-transformed frame, so it is never flipped/rotated/cropped/colour-shifted.
+        var ovp=tagOv?shOverlayPainter(cw,ch,tagOv):null, oc=null, octx=null;
+        if(ovp&&!cfg.ident){oc=document.createElement('canvas');oc.width=cw;oc.height=ch;octx=oc.getContext('2d');}
         var draw=function(){
           ctx.save();ctx.filter=filt;
           ctx.translate(cw/2,ch/2);ctx.scale(p.flip*zoom,zoom);ctx.rotate(ang);
           ctx.drawImage(v,-cw/2,-ch/2,cw,ch);ctx.restore();
+          if(ovp){if(cfg.ident)ovp(ctx);else if(octx){octx.drawImage(canvas,0,0);ovp(octx);}}
         };
         draw();
         var stream=canvas.captureStream(30);
+        var stream2=octx?oc.captureStream(30):null;
         // Audio: route the element's sound into a MediaStream (silent to speakers) and record it with the picture.
         try{
           var AC=window.AudioContext||window.webkitAudioContext;
