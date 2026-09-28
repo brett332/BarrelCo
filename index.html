@@ -4200,7 +4200,7 @@ async function shApplyTag(tag){
   shTagBusy=true;shUpdButtons();
   var failed=0;
   for(var i=0;i<work.length;i++){
-    var w=work[i],it=w.it,n=i+1;
+    var w=work[i],it=w.it,n=i+1,oldUrl=null;
     if(it.tile){it.tile.classList.add('busy');shTileFill(w.c,it,it.tile);}
     shStat('Applying '+SH_TAGNAME[tag]+' — '+n+' of '+work.length+(it.isVid&&tag!=='none'?' (video: re-encoding in real time)…':'…'));
     try{
