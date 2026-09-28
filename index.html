@@ -197,6 +197,18 @@ header{background:var(--surf);border-bottom:1px solid var(--bdr);padding:0 24px;
   .vcn{color:var(--muted);font-size:.56rem;}
   .dlb{padding:3px 7px;background:transparent;border:1px solid var(--bdr);border-radius:4px;color:var(--muted);font-family:'DM Mono',monospace;font-size:.56rem;cursor:pointer;transition:all .15s;}
   .dlb:hover{border-color:var(--grn);color:var(--grn);}
+  /* PhotoShift per-product (ps2-) */
+  .ps2-chips{display:flex;flex-wrap:wrap;gap:5px;}
+  .ps2-chip{display:flex;align-items:center;gap:6px;padding:5px 9px;border:1px solid var(--bdr);border-radius:14px;background:var(--surf);font-size:.64rem;cursor:pointer;user-select:none;transition:all .12s;}
+  .ps2-chip:hover{border-color:var(--acc);}
+  .ps2-chip.sel{border-color:var(--acc);background:rgba(232,197,71,.1);color:var(--acc);}
+  .ps2-chk{width:10px;font-size:.6rem;}
+  .ps2-cx{color:var(--muted);padding:0 2px;}.ps2-cx:hover{color:var(--red);}
+  .ps2-hint{font-size:.62rem;color:var(--muted);padding:4px 0;}
+  .ps2-box{border:1px solid var(--bdr);border-radius:8px;padding:9px;margin-bottom:9px;background:rgba(255,255,255,.015);display:flex;flex-direction:column;gap:6px;}
+  .ps2-box .slbl{margin-bottom:0;}
+  .ps2-vid{width:100%;aspect-ratio:1;object-fit:contain;background:#000;display:block;}
+  .ps2-err{padding:10px;font-size:.58rem;color:var(--red);line-height:1.5;word-break:break-word;aspect-ratio:1;overflow:auto;}
   ::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px;}
 .app-nav-btn{display:inline-flex;align-items:center;background:transparent;border:1px solid var(--bdr,#2a2a30);border-radius:4px;color:var(--muted,#666);font-size:.58rem;padding:3px 9px;cursor:pointer;text-decoration:none;transition:all .15s;font-family:inherit;letter-spacing:.03em;}
 .app-nav-btn:hover{border-color:var(--acc,#e8c547);color:var(--acc,#e8c547);}
