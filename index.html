@@ -2155,9 +2155,9 @@ function psFolderName(prodName,locName){return sanitizeFolderName(prodName+' '+S
 function updPrev(){
   var date=(document.getElementById('sDate').value||'DATE');
   var p=psSel.length?psProdByKey(psSel[0]):null;
-  var locs=getChkLocs();
+  var locs=shChkLocs();
   var el=document.getElementById('fprev');
-  if(el)el.textContent=psFolderName(p?p.name:'Product',locs.length?locs[0]:'Location')+' / '+date+'_img_xxxxx.jpg';
+  if(el)el.textContent=psFolderName(p?p.name:'Product',locs.length?locs[0].name:'Location')+' / '+date+'_img_xxxxx.jpg';
 }
 
 // ── EXIF ───────────────────────────────────────────────────────────────────
