@@ -1528,7 +1528,7 @@ function switchVenture(ventureId){
   if(ra) ra.innerHTML='';
   var btn=document.getElementById('genBtn');
   if(btn){ btn.disabled=true; btn.textContent='Generate Listings →'; }
-  if(typeof psLoadLocsForVenture==='function') psLoadLocsForVenture();
+  if(typeof shLoadVenture==='function') shLoadVenture();
   if(typeof ssApplyVenture==='function') ssApplyVenture();
 }
 
