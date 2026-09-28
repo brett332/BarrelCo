@@ -2276,13 +2276,19 @@ function psVariation(){
     sat:g('tSat')?(0.85+Math.random()*0.3*intensity*2):(1+(Math.random()>0.5?0.02:-0.02))
   };
 }
-// Resolves {blob,ext,dur,warn} or rejects with Error. onProg(fraction,durationSec) is called during playback.
-function psShiftVideo(file,onProg){
-  return new Promise(function(resolve,reject){
+// psShiftVideo = random shift; if a tag is given the overlay (watermark / idea banner) is recorded as a SECOND parallel output,
+// so the clean shifted clip is kept for later re-tagging. shOverlayVideo = overlay-only pass over a stored shifted clip (identity transform).
+// Resolves {blob,ovBlob,ext,dur,warn} or rejects with Error. Shift mode: blob = clean shifted, ovBlob = with overlay (or null).
+// Overlay-only mode: blob = with overlay. onProg(fraction,durationSec) is called during playback.
+function psShiftVideo(file,onProg,tag){return shVideoCore(file,{onProg:onProg,tag:tag,ident:false});}
+function shOverlayVideo(blob,tag,durHint,onProg){return shVideoCore(blob,{onProg:onProg,tag:tag,ident:true,durHint:durHint});}
+function shVideoCore(file,cfg){
+  var onProg=cfg.onProg, tagOv=(cfg.tag&&cfg.tag!=='none')?cfg.tag:null;
+  return shEnsureLogo().then(function(){return new Promise(function(resolve,reject){
     var pick=psPickVideoMime();
     if(!pick)return reject(new Error('This browser cannot re-encode video (MediaRecorder unavailable)'));
     var url=URL.createObjectURL(file), v=document.createElement('video');
-    var settled=false, rec=null, actx=null, timer=null, stopped=false, chunks=[], dur=0, warn='';
+    var settled=false, rec=null, rec2=null, actx=null, timer=null, stopped=false, chunks=[], chunks2=[], dur=0, warn='', stop1=false, stop2=true;
     v.preload='auto';v.playsInline=true;
     v.style.cssText='position:fixed;left:-9999px;top:0;width:2px;height:2px;opacity:0;pointer-events:none;';
     document.body.appendChild(v);
