@@ -2078,7 +2078,7 @@ function handleFiles(fl,key){
   Array.from(fl).forEach(function(f){
     var isVid=f.type.startsWith('video/'), isImg=f.type.startsWith('image/');
     if(!isVid&&!isImg)return;
-    var rec={id:Math.random().toString(36).slice(2),file:f,name:f.name,url:URL.createObjectURL(f),isVid:isVid,dur:NaN,pk:key};
+    var rec={id:Math.random().toString(36).slice(2),file:f,name:f.name,url:URL.createObjectURL(f),isVid:isVid,dur:NaN,pk:key,tag:shImportTag||'none'};
     psFiles[key].push(rec);
     selIds.add(rec.id);
     if(isVid){
