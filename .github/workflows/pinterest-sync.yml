@@ -19,7 +19,13 @@ jobs:
         run: |
           set -euo pipefail
           AUTH="Authorization: Bearer $SYNC_TOKEN"
-          BOARDS=$(curl -fsS -H "$AUTH" "$SYNC_URL/boards" | jq -r '.boards[]')
+          echo "SYNC_URL has https: $([[ "$SYNC_URL" == https://* ]] && echo yes || echo NO), length ${#SYNC_URL}; SYNC_TOKEN length ${#SYNC_TOKEN}"
+          echo "Worker /diag says: $(curl -sS -H "$AUTH" "$SYNC_URL/diag" | tr -d '\n')"
+          RESP=$(curl -sS -w '\n%{http_code}' -H "$AUTH" "$SYNC_URL/boards")
+          CODE=$(echo "$RESP" | tail -n1); BODY=$(echo "$RESP" | sed '$d')
+          echo "GET /boards -> HTTP $CODE: $BODY"
+          [ "$CODE" = "200" ] || { echo "::error::boards request failed with HTTP $CODE"; exit 1; }
+          BOARDS=$(echo "$BODY" | jq -r '.boards[]')
           FAILED=0
           for b in $BOARDS; do
             for i in $(seq 1 20); do
