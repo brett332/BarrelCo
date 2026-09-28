@@ -4213,13 +4213,13 @@ async function shApplyTag(tag){
         nb=res.blob;
       }else nb=await psWithTimeout(shOverlayImage(it.base,tag),60000,'Overlay timed out');
       it.blob=nb;it.tag=tag;it.ovErr='';
-      if(it.url){try{URL.revokeObjectURL(it.url);}catch(e){}}
-      it.url=URL.createObjectURL(it.blob);
+      oldUrl=it.url;it.url=URL.createObjectURL(it.blob);
     }catch(err){
       failed++;it.ovErr=(err&&err.message)||String(err);
       shDbg('Overlay change failed: '+it.srcName+' — '+it.ovErr);
     }
     if(it.tile){it.tile.classList.remove('busy');shTileFill(w.c,it,it.tile);if(it.ovErr)it.tile.title='Overlay failed: '+it.ovErr;}
+    if(oldUrl){(function(u){setTimeout(function(){try{URL.revokeObjectURL(u);}catch(e){}},1500);})(oldUrl);}
   }
   shTagBusy=false;shUpdButtons();
   shStat('Done — '+(work.length-failed)+' updated'+(failed?', '+failed+' failed (kept the previous version)':'')+'. Save writes the current versions.');
