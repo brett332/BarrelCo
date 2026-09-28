@@ -2148,11 +2148,7 @@ function renderShelf(key){
   });
 }
 function psSelectedFor(key){return (psFiles[key]||[]).filter(function(f){return selIds.has(f.id);});}
-function ssUpdBtn(){
-  var b=document.getElementById('ps-gb');if(!b)return;
-  var any=psSel.some(function(k){return psSelectedFor(k).length>0;});
-  b.disabled=psBusy||!(any&&getChkLocs().length>0);
-}
+function ssUpdBtn(){ if(typeof shUpdButtons==='function') shUpdButtons(); }
 function setVar(n,btn){varCount=n;document.querySelectorAll('.vb').forEach(function(b){b.classList.remove('act');});btn.classList.add('act');}
 // Folder name for one product x location combo — same helper/style as ListingForge ("Barrels Baltimore N")
 function psFolderName(prodName,locName){return sanitizeFolderName(prodName+' '+String(locName).replace(/_/g,' '));}
