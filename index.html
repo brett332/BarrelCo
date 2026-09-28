@@ -2275,17 +2275,54 @@ document.addEventListener('drop',function(e){e.preventDefault();});
     </div>
   </div>
 
-  <!-- Locations -->
+  <!-- Locations (built-in ListingForge locations + your custom photo-only ones) -->
   <div>
-    <div class="slbl">Locations</div>
-    <div class="ll" id="ll"></div>
+    <div class="slbl"><span>Locations</span><span class="sh-textonly" style="text-transform:none;letter-spacing:0;">✎ edits pickup / delivery text</span></div>
+    <div id="shMig"></div>
+    <div class="ll" id="ll" style="max-height:280px;"></div>
     <div class="alr">
-      <input type="text" class="ali" id="ali" placeholder="Add location…" onkeydown="if(event.key==='Enter')addLoc()">
+      <input type="text" class="ali" id="ali" placeholder="Add custom location (photos only)…" onkeydown="if(event.key==='Enter')addLoc()">
       <button class="alb" onclick="addLoc()">+ Add</button>
     </div>
   </div>
 
-  <button class="gb" id="ps-gb" disabled onclick="generate()">Generate →</button>
+  <!-- Overlays: watermark (Mine) + idea banner (Idea) -->
+  <div id="shOv">
+    <div class="slbl">Watermark &amp; idea banner</div>
+    <details class="sh-det" id="shOvDet">
+      <summary>Overlay settings (saved on this device)</summary>
+      <div class="sh-ovbody">
+        <div class="sh-ovh">Watermark — photos/videos tagged Mine</div>
+        <div class="cr"><span class="cl">Type</span>
+          <div class="vbs"><button type="button" class="vb" id="ovTypeText" onclick="shOvSetType('text')">Text</button><button type="button" class="vb" id="ovTypeLogo" onclick="shOvSetType('logo')">Logo image</button></div>
+        </div>
+        <div class="sf"><label>Watermark text</label><input type="text" class="si" id="ovText" oninput="shOvIn()"></div>
+        <div class="cr"><span class="cl">Text size (% of image)</span><div class="sw"><input type="range" id="ovTextSize" min="2" max="20" oninput="shOvIn()"><span class="sv" id="ovTextSizeV"></span></div></div>
+        <div class="cr"><span class="cl">Text color</span><input type="color" id="ovColor" oninput="shOvIn()"></div>
+        <div class="sf"><label>Logo image (upload once)</label>
+          <input type="file" id="ovLogoFile" accept="image/*" onchange="shOvLogoPick(this)">
+          <div style="display:flex;gap:8px;align-items:center;margin-top:5px;"><button type="button" class="alb" onclick="shOvLogoClear()">Remove logo</button><span class="sh-hint" id="ovLogoState" style="margin:0;"></span></div>
+        </div>
+        <div class="cr"><span class="cl">Logo size (% of width)</span><div class="sw"><input type="range" id="ovLogoSize" min="5" max="60" oninput="shOvIn()"><span class="sv" id="ovLogoSizeV"></span></div></div>
+        <div class="cr"><span class="cl">Opacity</span><div class="sw"><input type="range" id="ovOpacity" min="10" max="100" oninput="shOvIn()"><span class="sv" id="ovOpacityV"></span></div></div>
+        <div class="cr"><span class="cl">Position</span>
+          <select id="ovPos" onchange="shOvIn()">
+            <option value="br">Bottom right</option><option value="bl">Bottom left</option><option value="tr">Top right</option><option value="tl">Top left</option><option value="c">Center</option><option value="tile">Tiled</option>
+          </select>
+        </div>
+        <div class="sh-ovh">Idea banner — photos/videos tagged Idea</div>
+        <div class="sf"><label>Banner wording</label><input type="text" class="si" id="ovBannerText" oninput="shOvIn()"></div>
+        <div class="cr"><span class="cl">Banner color</span><input type="color" id="ovBannerBg" oninput="shOvIn()"></div>
+        <div class="sh-prevrow">
+          <div><canvas id="ovPrevMine" width="300" height="190"></canvas>Mine preview</div>
+          <div><canvas id="ovPrevIdea" width="300" height="190"></canvas>Idea preview</div>
+        </div>
+      </div>
+    </details>
+  </div>
+</div></div>
+
+  <button class="gb" id="ps-gb" disabled onclick="generate()">Generate photos →</button>
 </div>
 
 <!-- Panel -->
