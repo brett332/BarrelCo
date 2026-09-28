@@ -2315,46 +2315,150 @@ function addLoc(){
   if(!val)return;
   addLocToList(val,true);saveLocs();inp.value='';ssUpdBtn();
 }
-function updPrev(){
-  var date=document.getElementById('sDate').value||'DATE';
-  var prod=document.getElementById('sProd').value||'Product';
-  var locs=getChkLocs();
-  var loc=locs.length?locs[0]:'Location';
-  document.getElementById('fprev').textContent=date+'_'+prod+' / '+loc+' / img_xxxxx.jpg';
+
+// ── PHOTOSHIFT: PRODUCTS + PER-PRODUCT UPLOAD BOXES ────────────────────────
+// State: psSel = ordered keys of selected products; psFiles[key] = files dropped in THAT product's box only.
+
+function psEsc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function psSlug(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');}
+function psProdList(){
+  var list=(PRODUCTS||[]).map(function(p){return {key:CURRENT_VENTURE+':'+p.id,name:p.name,code:p.code||'',custom:false};});
+  psCustom.forEach(function(n){list.push({key:CURRENT_VENTURE+':c:'+psSlug(n),name:n,code:'',custom:true});});
+  return list;
 }
-
-// ── UPLOAD ─────────────────────────────────────────────────────────────────
-var uz=document.getElementById('uz');
-uz.addEventListener('click',function(e){if(e.target===uz||e.target.classList.contains('uz-txt')||e.target.classList.contains('uz-ico')){document.getElementById('fi').click();}});
-uz.addEventListener('dragover',function(e){e.stopPropagation();e.preventDefault();uz.classList.add('dov');});
-uz.addEventListener('dragleave',function(){uz.classList.remove('dov');});
-uz.addEventListener('drop',function(e){e.stopPropagation();e.preventDefault();uz.classList.remove('dov');handleFiles(e.dataTransfer.files);});
-
-function handleFiles(fl){
-  Array.from(fl).forEach(function(f){
-    if(!f.type.startsWith('image/')&&!f.type.startsWith('video/'))return;
-    var id=Math.random().toString(36).slice(2);
-    files.push({id:id,file:f,name:f.name,url:URL.createObjectURL(f),isVid:f.type.startsWith('video/')});
-    selIds.add(id);
+function psProdByKey(k){return psProdList().filter(function(p){return p.key===k;})[0]||null;}
+function psLoadProductsForVenture(){
+  psSel=[];
+  try{psCustom=JSON.parse(localStorage.getItem('ps_prods_custom_'+CURRENT_VENTURE)||'[]');}catch(e){psCustom=[];}
+  if(!Array.isArray(psCustom))psCustom=[];
+  psRenderProducts();
+}
+function psSaveCustom(){try{localStorage.setItem('ps_prods_custom_'+CURRENT_VENTURE,JSON.stringify(psCustom));}catch(e){}}
+function psAddCustomProd(){
+  var inp=document.getElementById('psCustomProd');
+  var name=(inp.value||'').replace(/\s+/g,' ').trim();
+  if(!name)return;
+  var key=CURRENT_VENTURE+':c:'+psSlug(name);
+  if(!psSlug(name))return;
+  if(!psProdByKey(key)){psCustom.push(name);psSaveCustom();}
+  if(psSel.indexOf(key)<0)psSel.push(key);
+  inp.value='';
+  psRenderProducts();
+}
+function psRemoveCustomProd(key){
+  var p=psProdByKey(key);if(!p)return;
+  psCustom=psCustom.filter(function(n){return CURRENT_VENTURE+':c:'+psSlug(n)!==key;});
+  psSaveCustom();
+  (psFiles[key]||[]).forEach(function(f){selIds.delete(f.id);});
+  delete psFiles[key];
+  psSel=psSel.filter(function(k){return k!==key;});
+  psRenderProducts();
+}
+function psToggleProd(key){
+  var i=psSel.indexOf(key);
+  if(i>=0)psSel.splice(i,1);else psSel.push(key);
+  psRenderProducts();
+}
+function psRenderProducts(){
+  var box=document.getElementById('psProds');
+  if(!box)return;
+  var list=psProdList();
+  psSel=psSel.filter(function(k){return list.some(function(p){return p.key===k;});});
+  box.innerHTML='';
+  if(!list.length){box.innerHTML='<div class="ps2-hint">No saved products for this venture — add a custom name below.</div>';}
+  list.forEach(function(p){
+    var d=document.createElement('div');
+    d.className='ps2-chip'+(psSel.indexOf(p.key)>=0?' sel':'');
+    d.dataset.pk=p.key;
+    d.innerHTML='<span class="ps2-chk">'+(psSel.indexOf(p.key)>=0?'✓':'')+'</span><span class="ps2-cn">'+psEsc(p.name)+'</span>'+(p.custom?'<span class="ps2-cx" title="Remove custom product">✕</span>':'');
+    d.addEventListener('click',function(e){
+      if(e.target.classList.contains('ps2-cx')){e.stopPropagation();psRemoveCustomProd(p.key);return;}
+      psToggleProd(p.key);
+    });
+    box.appendChild(d);
   });
-  renderShelf();ssUpdBtn();
+  psRenderBoxes();ssUpdBtn();updPrev();
 }
-function renderShelf(){
-  var s=document.getElementById('shelf');
-  document.getElementById('fc').textContent=files.length;
+function psRenderBoxes(){
+  var host=document.getElementById('psBoxes');
+  if(!host)return;
+  host.innerHTML='';
+  if(!psSel.length){host.innerHTML='<div class="ps2-hint">Select a product above to get its upload box.</div>';return;}
+  psSel.forEach(function(key){
+    var p=psProdByKey(key);if(!p)return;
+    var box=document.createElement('div');
+    box.className='ps2-box';box.dataset.pk=key;
+    box.innerHTML='<div class="slbl"><span>'+psEsc(p.name)+'</span><span>Files (<span class="ps2-fc">0</span>)</span></div>'+
+      '<div class="uz"><input type="file" class="ps2-fi" accept="image/*,video/*" multiple>'+
+      '<div class="uz-ico">📁</div><div class="uz-txt"><strong>Drop '+psEsc(p.name)+' files or click</strong>JPG PNG WEBP MP4 MOV</div></div>'+
+      '<div class="shelf ps2-shelf"></div>';
+    var uzEl=box.querySelector('.uz'), fi=box.querySelector('.ps2-fi');
+    fi.addEventListener('change',function(){handleFiles(fi.files,key);fi.value='';});
+    uzEl.addEventListener('click',function(e){if(e.target===uzEl||e.target.classList.contains('uz-txt')||e.target.classList.contains('uz-ico')||e.target.tagName==='STRONG'){fi.click();}});
+    uzEl.addEventListener('dragover',function(e){e.stopPropagation();e.preventDefault();uzEl.classList.add('dov');});
+    uzEl.addEventListener('dragleave',function(){uzEl.classList.remove('dov');});
+    uzEl.addEventListener('drop',function(e){e.stopPropagation();e.preventDefault();uzEl.classList.remove('dov');handleFiles(e.dataTransfer.files,key);});
+    host.appendChild(box);
+    renderShelf(key);
+  });
+}
+function psFmtDur(s){if(!isFinite(s))return '?';s=Math.round(s);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
+function handleFiles(fl,key){
+  if(!key||!psProdByKey(key))return;
+  if(!psFiles[key])psFiles[key]=[];
+  Array.from(fl).forEach(function(f){
+    var isVid=f.type.startsWith('video/'), isImg=f.type.startsWith('image/');
+    if(!isVid&&!isImg)return;
+    var rec={id:Math.random().toString(36).slice(2),file:f,name:f.name,url:URL.createObjectURL(f),isVid:isVid,dur:NaN,pk:key};
+    psFiles[key].push(rec);
+    selIds.add(rec.id);
+    if(isVid){
+      var pv=document.createElement('video');pv.preload='metadata';
+      pv.onloadedmetadata=function(){rec.dur=pv.duration;pv.removeAttribute('src');renderShelf(key);};
+      pv.onerror=function(){rec.dur=NaN;};
+      pv.src=rec.url;
+    }
+  });
+  renderShelf(key);ssUpdBtn();
+}
+function renderShelf(key){
+  var box=document.querySelector('.ps2-box[data-pk="'+key+'"]');
+  if(!box)return;
+  var list=psFiles[key]||[];
+  box.querySelector('.ps2-fc').textContent=list.length;
+  var s=box.querySelector('.ps2-shelf');
   s.innerHTML='';
-  files.forEach(function(f){
+  list.forEach(function(f){
     var d=document.createElement('div');
     d.className='pt'+(selIds.has(f.id)?' sel':'');
-    if(f.isVid){d.innerHTML='<div class="vt">🎬</div><div style="flex:1;min-width:0"><div class="pt-name">'+f.name+'</div><div class="pt-meta">video</div></div><span class="pt-del">✕</span>';}
-    else{d.innerHTML='<img src="'+f.url+'" alt=""><div style="flex:1;min-width:0"><div class="pt-name">'+f.name+'</div><div class="pt-meta">photo</div></div><span class="pt-del">✕</span>';}
-    d.querySelector('.pt-del').addEventListener('click',function(e){e.stopPropagation();files=files.filter(function(x){return x.id!==f.id;});selIds.delete(f.id);renderShelf();ssUpdBtn();});
+    var meta='photo';
+    if(f.isVid){
+      var mb=f.file.size/1048576;
+      meta='video '+psFmtDur(f.dur)+' · '+mb.toFixed(1)+'MB';
+      if(f.dur>PS_WARN_CLIP_SEC||mb>PS_WARN_CLIP_MB)meta+=' ⚠ long/large — slow to re-encode';
+    }
+    d.innerHTML=(f.isVid?'<div class="vt">🎬</div>':'<img src="'+f.url+'" alt="">')+'<div style="flex:1;min-width:0"><div class="pt-name">'+psEsc(f.name)+'</div><div class="pt-meta">'+psEsc(meta)+'</div></div><span class="pt-del">✕</span>';
+    d.querySelector('.pt-del').addEventListener('click',function(e){e.stopPropagation();psFiles[key]=psFiles[key].filter(function(x){return x.id!==f.id;});selIds.delete(f.id);renderShelf(key);ssUpdBtn();});
     d.addEventListener('click',function(e){if(e.target.classList.contains('pt-del'))return;selIds.has(f.id)?selIds.delete(f.id):selIds.add(f.id);d.classList.toggle('sel');ssUpdBtn();});
     s.appendChild(d);
   });
 }
-function ssUpdBtn(){document.getElementById('ps-gb').disabled=!(selIds.size>0&&getChkLocs().length>0);}
+function psSelectedFor(key){return (psFiles[key]||[]).filter(function(f){return selIds.has(f.id);});}
+function ssUpdBtn(){
+  var b=document.getElementById('ps-gb');if(!b)return;
+  var any=psSel.some(function(k){return psSelectedFor(k).length>0;});
+  b.disabled=psBusy||!(any&&getChkLocs().length>0);
+}
 function setVar(n,btn){varCount=n;document.querySelectorAll('.vb').forEach(function(b){b.classList.remove('act');});btn.classList.add('act');}
+// Folder name for one product x location combo — same helper/style as ListingForge ("Barrels Baltimore N")
+function psFolderName(prodName,locName){return sanitizeFolderName(prodName+' '+String(locName).replace(/_/g,' '));}
+function updPrev(){
+  var date=(document.getElementById('sDate').value||'DATE');
+  var p=psSel.length?psProdByKey(psSel[0]):null;
+  var locs=getChkLocs();
+  var el=document.getElementById('fprev');
+  if(el)el.textContent=psFolderName(p?p.name:'Product',locs.length?locs[0]:'Location')+' / '+date+'_img_xxxxx.jpg';
+}
 
 // ── EXIF ───────────────────────────────────────────────────────────────────
 function getExif(file){
