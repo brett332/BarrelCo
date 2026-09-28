@@ -2046,7 +2046,7 @@ function psRenderProducts(){
     });
     box.appendChild(d);
   });
-  psRenderBoxes();ssUpdBtn();updPrev();
+  psRenderBoxes();if(typeof shRenderLocs==='function')shRenderLocs();ssUpdBtn();updPrev();
 }
 function psRenderBoxes(){
   var host=document.getElementById('psBoxes');
