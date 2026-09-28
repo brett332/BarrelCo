@@ -2295,6 +2295,7 @@ function shVideoCore(file,cfg){
     function cleanup(){
       stopped=true;clearTimeout(timer);
       try{if(rec&&rec.state!=='inactive')rec.stop();}catch(e){}
+      try{if(rec2&&rec2.state!=='inactive')rec2.stop();}catch(e){}
       try{if(actx)actx.close();}catch(e){}
       try{v.pause();v.removeAttribute('src');v.load();v.remove();}catch(e){}
       URL.revokeObjectURL(url);
