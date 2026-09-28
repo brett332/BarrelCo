@@ -3711,6 +3711,702 @@ function syncDebugFromSheet(){
 <script>
 
 // ── BARRELCO UNIFIED NAV ──────────────────────────────────────────────────
+// (nav script continues below the shared setup script)
+</script>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════════
+// SHARED SETUP · TAGS · OVERLAYS · UNIFIED RUN ENGINE  (ListingForge + PhotoShift)
+// One setup node (#shSetup: products, locations, per-product upload boxes, shift + overlay settings) is moved between the
+// two tabs by bcNav, so both tabs always show the very same selection. ListingForge = Text and/or Photos; PhotoShift = Photos only.
+// Overlays (watermark = Mine, idea banner = Idea) are drawn on the FINISHED shifted output, after flip/rotate/crop/filters.
+// ══════════════════════════════════════════════════════════════════════════════
+var SH_TAGNAME={none:'None',mine:'Mine',idea:'Idea'};
+var shImportTag='none', shTagSel=new Set(), shResSel=new Set();
+var shCustomLocs=[], shLocSel={};
+var shResults=[], shTagBusy=false, shRootHandle=null, shClearFirst=true, shIdN=0;
+var shOv=null, shLogoImg=null, shLogoReady=null, shMeasureCtx=null;
+var SH_OV_DEF={wm:{type:'text',text:'BarrelCo',textSize:6,color:'#ffffff',opacity:60,pos:'br',logoSize:22,logoData:''},banner:{text:'PROJECT IDEA - NOT FOR SALE',bg:'#c62828'}};
+var SH_LOC_ALIASES={baltimoren:'bal_n',baltimores:'bal_s',baltimoree:'bal_e',baltimorew:'bal_w',baltimorelaurel:'bal_l',winchester:'win',waynesboro:'way',rural:'rur'};
+
+function shUid(){return 'r'+(++shIdN)+Math.random().toString(36).slice(2,6);}
+function shLsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function shLsSet(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}}
+function shNorm(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'');}
+function shDbg(m){if(typeof logDebug==='function'){try{logDebug(m);}catch(e){}}}
+function shMctx(){if(!shMeasureCtx)shMeasureCtx=document.createElement('canvas').getContext('2d');return shMeasureCtx;}
+
+// ── LOCATIONS: built-in ListingForge locations + custom (photo-only) ones, one shared selection ──
+function shAllLocs(){
+  var list=(LOCATIONS||[]).slice();
+  shCustomLocs.forEach(function(n){list.push({id:'c:'+psSlug(n),name:n,custom:true});});
+  return list;
+}
+function shChkLocs(){return shAllLocs().filter(function(l){return shLocSel[l.id];});}
+function shSaveCustomLocs(){shLsSet('bc_custom_locs_'+CURRENT_VENTURE,JSON.stringify(shCustomLocs));}
+function shLoadCustomLocs(){
+  shCustomLocs=[];
+  try{shCustomLocs=JSON.parse(shLsGet('bc_custom_locs_'+CURRENT_VENTURE)||'[]');}catch(e){}
+  if(!Array.isArray(shCustomLocs))shCustomLocs=[];
+  shCustomLocs=shCustomLocs.filter(function(n){return typeof n==='string'&&psSlug(n);});
+}
+// One-time, non-destructive: PhotoShift's old free-text list (ps_locs_<venture>) is folded into the shared list.
+// Names that match a ListingForge location are merged into it; the rest are kept as custom photo-only locations. The old key is left untouched.
+function shMigrateOldLocs(){
+  var doneKey='bc_shared_locs_migrated_'+CURRENT_VENTURE;
+  if(shLsGet(doneKey))return;
+  var raw=shLsGet('ps_locs_'+CURRENT_VENTURE);
+  if(!raw&&CURRENT_VENTURE==='barrelco')raw=shLsGet('ps_locs');
+  var old=[];
+  if(raw){try{old=JSON.parse(raw);}catch(e){old=[];}}
+  if(!Array.isArray(old))old=[];
+  var merged=[],kept=[];
+  old.forEach(function(nm){
+    var n=shNorm(nm);if(!n)return;
+    var hit=(LOCATIONS||[]).filter(function(l){return shNorm(l.name)===n;})[0];
+    if(!hit&&CURRENT_VENTURE==='barrelco'&&SH_LOC_ALIASES[n])hit=(LOCATIONS||[]).filter(function(l){return l.id===SH_LOC_ALIASES[n];})[0];
+    if(hit){merged.push(String(nm)+' → '+hit.name);return;}
+    var disp=String(nm).replace(/_/g,' ').replace(/\s+/g,' ').trim();
+    if(disp&&shCustomLocs.map(shNorm).indexOf(shNorm(disp))<0)shCustomLocs.push(disp);
+    kept.push(disp);
+  });
+  if(old.length){
+    shSaveCustomLocs();
+    shLsSet('bc_shared_locs_note_'+CURRENT_VENTURE,'PhotoShift now shares ListingForge\'s locations. Your old PhotoShift list ('+old.length+') was folded in: '+merged.length+' matched existing locations'+(merged.length?' ('+merged.join('; ')+')':'')+', '+kept.length+' kept as custom photo-only locations'+(kept.length?' ('+kept.join(', ')+')':'')+'. Nothing was deleted; the old list is still saved.');
+  }
+  shLsSet(doneKey,'1');
+}
+function shRenderMigNote(){
+  var host=document.getElementById('shMig');if(!host)return;
+  host.innerHTML='';
+  var n=shLsGet('bc_shared_locs_note_'+CURRENT_VENTURE);
+  if(!n)return;
+  var d=document.createElement('div');d.className='sh-note';d.style.marginBottom='7px';
+  d.innerHTML=psEsc(n)+' <button type="button" class="alb" style="margin-left:6px;">Got it</button>';
+  d.querySelector('button').addEventListener('click',function(){try{localStorage.removeItem('bc_shared_locs_note_'+CURRENT_VENTURE);}catch(e){}shRenderMigNote();});
+  host.appendChild(d);
+}
+function shFirstBuiltinProd(){
+  var l=(psSel||[]).map(psProdByKey).filter(function(p){return p&&p.prod;});
+  return l.length?l[0].prod:null;
+}
+function shRenderLocs(){
+  var ll=document.getElementById('ll');if(!ll)return;
+  var open={};
+  Array.from(ll.querySelectorAll('.loc-editor.open')).forEach(function(e){open[e.dataset.lid]=1;});
+  ll.innerHTML='';
+  var p0=shFirstBuiltinProd();
+  shAllLocs().forEach(function(loc){
+    var wrap=document.createElement('div');wrap.className='sh-locwrap';wrap.dataset.lid=loc.id;
+    var row=document.createElement('div');row.className='li'+(shLocSel[loc.id]?' chk':'');row.dataset.loc=loc.id;
+    row.innerHTML='<div class="lck">'+(shLocSel[loc.id]?'✓':'')+'</div><span class="sh-lname">'+psEsc(loc.name)+'</span>'
+      +(loc.custom?'<span class="sh-badge">photos only</span>':'<span class="sh-lsku sh-textonly">'+(p0?psEsc(buildSKU(p0,loc)):'')+'</span><span class="sh-ledit sh-textonly" title="Edit pickup / delivery text">✎</span>')
+      +(loc.custom?'<span class="ldel" title="Remove custom location">✕</span>':'');
+    row.addEventListener('click',function(e){
+      var t=e.target;
+      if(t.classList.contains('ldel')){e.stopPropagation();shRemoveCustomLoc(loc.id);return;}
+      if(t.classList.contains('sh-ledit')){e.stopPropagation();var ed=wrap.querySelector('.loc-editor');if(ed)ed.classList.toggle('open');return;}
+      if(shLocSel[loc.id])delete shLocSel[loc.id];else shLocSel[loc.id]=true;
+      row.classList.toggle('chk',!!shLocSel[loc.id]);
+      row.querySelector('.lck').textContent=shLocSel[loc.id]?'✓':'';
+      shSelChanged();
+    });
+    wrap.appendChild(row);
+    if(!loc.custom){
+      var s=getLocSettings(loc.id);
+      var ed2=document.createElement('div');ed2.className='loc-editor sh-textonly'+(open[loc.id]?' open':'');ed2.dataset.lid=loc.id;
+      ed2.innerHTML='<div class="le-field"><label>Pickup location text</label><textarea id="le-pickup-'+loc.id+'" rows="2">'+psEsc(s.pickup||'')+'</textarea></div>'
+        +'<div class="le-field"><label>Delivery note (leave blank to omit)</label><input type="text" id="le-delivery-'+loc.id+'" value="'+psEsc(s.delivery||'')+'"></div>'
+        +'<button type="button" class="le-save">Save</button>';
+      ed2.querySelector('.le-save').addEventListener('click',function(){
+        var dv=document.getElementById('le-delivery-'+loc.id).value.trim();
+        saveLocSettings(loc.id,{pickup:document.getElementById('le-pickup-'+loc.id).value.trim(),delivery:dv,includeDelivery:!!dv});
+        ed2.classList.remove('open');
+      });
+      wrap.appendChild(ed2);
+    }
+    ll.appendChild(wrap);
+  });
+}
+function addLoc(){
+  var inp=document.getElementById('ali');
+  var val=(inp.value||'').replace(/\s+/g,' ').trim();
+  if(!val||!psSlug(val))return;
+  var n=shNorm(val),ex=shAllLocs().filter(function(l){return shNorm(l.name)===n;})[0];
+  if(ex)shLocSel[ex.id]=true;
+  else{shCustomLocs.push(val);shSaveCustomLocs();shLocSel['c:'+psSlug(val)]=true;}
+  inp.value='';shRenderLocs();shSelChanged();
+}
+function shRemoveCustomLoc(id){
+  shCustomLocs=shCustomLocs.filter(function(n){return 'c:'+psSlug(n)!==id;});
+  delete shLocSel[id];shSaveCustomLocs();shRenderLocs();shSelChanged();
+}
+function shSelChanged(){shUpdButtons();updPrev();}
+
+// ── BATCH IMPORT TAG ("tag new uploads as") ──
+document.addEventListener('click',function(e){
+  var b=e.target.closest?e.target.closest('.sh-imp-b'):null;
+  if(!b)return;
+  shImportTag=b.dataset.imp||'none';
+  document.querySelectorAll('.sh-imp-b').forEach(function(x){x.classList.toggle('act',x.dataset.imp===shImportTag);});
+});
+
+// ── BUTTON STATE (ListingForge Generate + PhotoShift Generate) ──
+function shSwitch(name){var el=document.getElementById(name==='text'?'swText':'swPhotos');return !el||el.checked;}
+function shHasFiles(){return (psSel||[]).some(function(k){return psSelectedFor(k).length>0;});}
+function shHasTextable(){
+  var hasP=(psSel||[]).some(function(k){var p=psProdByKey(k);return p&&p.prod;});
+  return hasP&&shChkLocs().some(function(l){return !l.custom;});
+}
+function shUpdButtons(){
+  var anyLoc=shChkLocs().length>0;
+  var b=document.getElementById('ps-gb');
+  if(b)b.disabled=psBusy||shTagBusy||!(anyLoc&&shHasFiles());
+  var g=document.getElementById('genBtn'),hint=document.getElementById('lfHint');
+  if(!g)return;
+  var t=shSwitch('text'),p=shSwitch('photos'),why='';
+  if(!t&&!p)why='Turn on Text and/or Photos.';
+  else if(!(psSel||[]).length)why='Select at least one product.';
+  else if(!anyLoc)why='Select at least one location.';
+  else if(t&&!p&&!shHasTextable())why='Text needs a built-in product and location (custom ones are photos only).';
+  else if(!t&&p&&!shHasFiles())why='Photos only: add photos/videos to a product\'s box.';
+  else if(t&&p&&!shHasTextable()&&!shHasFiles())why='Add photos, or pick a built-in product and location for text.';
+  g.disabled=psBusy||shTagBusy||!!why;
+  if(hint)hint.textContent=why;
+  g.textContent=psBusy?'Generating…':(t&&p?'Generate Listings + Photos →':t?'Generate Listings →':'Generate Photos →');
+}
+function shMountSetup(app){
+  var el=document.getElementById('shSetup');if(!el)return;
+  var slot=document.getElementById(app==='photoshift'?'psSetupSlot':'lfSetupSlot');
+  if(slot&&el.parentNode!==slot)slot.appendChild(el);
+  el.classList.toggle('sh-photos-only',app==='photoshift');
+  shUpdButtons();
+}
+
+// ── OVERLAY SETTINGS (saved per venture in localStorage) ──
+function shOvLoad(){
+  shOv=JSON.parse(JSON.stringify(SH_OV_DEF));
+  try{
+    var s=JSON.parse(shLsGet('bc_overlay_'+CURRENT_VENTURE)||'null');
+    if(s){if(s.wm)Object.assign(shOv.wm,s.wm);if(s.banner)Object.assign(shOv.banner,s.banner);}
+  }catch(e){}
+  shLogoLoad().then(function(){shOvPreview();});
+}
+function shOvSave(){return shLsSet('bc_overlay_'+CURRENT_VENTURE,JSON.stringify(shOv));}
+function shLogoLoad(){
+  shLogoImg=null;shLogoReady=null;
+  if(!shOv||!shOv.wm.logoData)return Promise.resolve(null);
+  shLogoReady=new Promise(function(res){
+    var im=new Image();
+    im.onload=function(){shLogoImg=im;res(im);};
+    im.onerror=function(){res(null);};
+    im.src=shOv.wm.logoData;
+  });
+  return shLogoReady;
+}
+function shEnsureLogo(){return shLogoReady||Promise.resolve(null);}
+function shOvLabels(){
+  var g=function(id){return document.getElementById(id);};
+  if(!g('ovTextSizeV'))return;
+  g('ovTextSizeV').textContent=shOv.wm.textSize+'%';g('ovLogoSizeV').textContent=shOv.wm.logoSize+'%';g('ovOpacityV').textContent=shOv.wm.opacity+'%';
+}
+function shOvSync(){
+  var g=function(id){return document.getElementById(id);};
+  if(!g('ovText')||!shOv)return;
+  var w=shOv.wm;
+  g('ovText').value=w.text;g('ovTextSize').value=w.textSize;g('ovColor').value=w.color;g('ovOpacity').value=w.opacity;
+  g('ovPos').value=w.pos;g('ovLogoSize').value=w.logoSize;g('ovBannerText').value=shOv.banner.text;g('ovBannerBg').value=shOv.banner.bg;
+  g('ovTypeText').classList.toggle('act',w.type==='text');g('ovTypeLogo').classList.toggle('act',w.type==='logo');
+  g('ovLogoState').textContent=w.logoData?'Logo saved ✓':'No logo uploaded yet (text is used until you add one)';
+  shOvLabels();
+}
+function shOvIn(){
+  var g=function(id){return document.getElementById(id);};
+  var w=shOv.wm;
+  w.text=g('ovText').value;w.textSize=parseInt(g('ovTextSize').value)||6;w.color=g('ovColor').value||'#ffffff';
+  w.opacity=parseInt(g('ovOpacity').value)||60;w.pos=g('ovPos').value||'br';w.logoSize=parseInt(g('ovLogoSize').value)||22;
+  shOv.banner.text=g('ovBannerText').value;shOv.banner.bg=g('ovBannerBg').value||'#c62828';
+  shOvSave();shOvLabels();shOvPreview();
+}
+function shOvSetType(t){shOv.wm.type=t==='logo'?'logo':'text';shOvSave();shOvSync();shOvPreview();}
+function shOvLogoPick(inp){
+  var f=inp.files&&inp.files[0];inp.value='';
+  if(!f)return;
+  var url=URL.createObjectURL(f),im=new Image();
+  im.onload=function(){
+    var sc=Math.min(1,600/Math.max(im.naturalWidth,im.naturalHeight));
+    var c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.naturalWidth*sc));c.height=Math.max(1,Math.round(im.naturalHeight*sc));
+    c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+    URL.revokeObjectURL(url);
+    shOv.wm.logoData=c.toDataURL('image/png');shOv.wm.type='logo';
+    var saved=shOvSave();
+    shLogoLoad().then(function(){shOvSync();shOvPreview();if(!saved){var st=document.getElementById('ovLogoState');if(st)st.textContent='Logo loaded but too large to save on this device — re-upload it next visit';}});
+  };
+  im.onerror=function(){URL.revokeObjectURL(url);var st=document.getElementById('ovLogoState');if(st)st.textContent='That file could not be read as an image.';};
+  im.src=url;
+}
+function shOvLogoClear(){shOv.wm.logoData='';shOv.wm.type='text';shOvSave();shLogoLoad();shOvSync();shOvPreview();}
+function shOvPreview(){
+  ['mine','idea'].forEach(function(tag){
+    var c=document.getElementById(tag==='mine'?'ovPrevMine':'ovPrevIdea');if(!c||!shOv)return;
+    var ctx=c.getContext('2d'),w=c.width,h=c.height;
+    var gr=ctx.createLinearGradient(0,0,w,h);gr.addColorStop(0,'#8fb8d8');gr.addColorStop(0.55,'#c9b98a');gr.addColorStop(1,'#5b6b4a');
+    ctx.fillStyle=gr;ctx.fillRect(0,0,w,h);
+    ctx.fillStyle='rgba(60,40,20,.85)';ctx.fillRect(w*0.3,h*0.35,w*0.4,h*0.5);
+    ctx.fillStyle='rgba(255,255,255,.55)';ctx.fillRect(w*0.06,h*0.08,w*0.2,h*0.2);
+    var p=shOverlayPainter(w,h,tag);if(p)p(ctx);
+  });
+}
+
+// ── OVERLAY DRAWING (works on any canvas size; used for photos and for every video frame) ──
+function shHexLum(hex){
+  var m=/^#?([0-9a-f]{6})$/i.exec(String(hex||''));if(!m)return 0;
+  var n=parseInt(m[1],16),f=function(c){c/=255;return c<=0.03928?c/12.92:Math.pow((c+0.055)/1.055,2.4);};
+  return 0.2126*f((n>>16)&255)+0.7152*f((n>>8)&255)+0.0722*f(n&255);
+}
+// Idea banner: solid band across the bottom; wording auto-fits (shrinks, then wraps to up to 4 lines) so it is never cropped.
+function shBannerLayout(w,h,text){
+  var ctx=shMctx();
+  var t=String(text||'').replace(/\s+/g,' ').trim()||'PROJECT IDEA - NOT FOR SALE';
+  var short=Math.min(w,h),band1=Math.max(28,Math.round(short*0.09)),maxW=w*0.92;
+  var f0=band1*0.52,minF=Math.max(10,short*0.022);
+  var font=function(px){return 'bold '+Math.max(1,Math.round(px))+'px Arial, Helvetica, sans-serif';};
+  var wrap=function(px){
+    ctx.font=font(px);
+    var out=[],cur='';
+    t.split(' ').forEach(function(wd){
+      while(ctx.measureText(wd).width>maxW&&wd.length>1){
+        var k=wd.length;
+        while(k>1&&ctx.measureText(wd.slice(0,k)).width>maxW)k--;
+        if(cur){out.push(cur);cur='';}
+        out.push(wd.slice(0,k));wd=wd.slice(k);
+      }
+      var s=cur?cur+' '+wd:wd;
+      if(ctx.measureText(s).width<=maxW)cur=s;else{if(cur)out.push(cur);cur=wd;}
+    });
+    if(cur)out.push(cur);
+    return out;
+  };
+  var px,lines=null;
+  for(px=f0;px>=Math.max(minF,band1*0.34);px*=0.94){var l1=wrap(px);if(l1.length===1){lines=l1;break;}}
+  if(!lines){for(px=f0;px>=minF;px*=0.94){var l2=wrap(px);if(l2.length<=2){lines=l2;break;}}}
+  if(!lines){
+    px=minF;lines=wrap(px);
+    if(lines.length>4){
+      lines=lines.slice(0,4);var last=lines[3];ctx.font=font(px);
+      while(last.length>1&&ctx.measureText(last+'…').width>maxW)last=last.slice(0,-1);
+      lines[3]=last+'…';
+    }
+  }
+  var lh=px*1.22,bandH=Math.round(Math.max(band1,lines.length*lh+px*0.8));
+  bandH=Math.min(bandH,Math.round(h*0.45));
+  return {font:font(px),lines:lines,bandH:bandH,lh:lh};
+}
+function shBannerPainter(w,h){
+  var lay=shBannerLayout(w,h,shOv.banner.text),bg=shOv.banner.bg||'#c62828',fg=shHexLum(bg)>0.179?'#111111':'#ffffff';
+  return function(ctx){
+    ctx.save();ctx.globalAlpha=1;ctx.filter='none';
+    ctx.fillStyle=bg;ctx.fillRect(0,h-lay.bandH,w,lay.bandH);
+    ctx.fillStyle=fg;ctx.font=lay.font;ctx.textAlign='center';ctx.textBaseline='middle';
+    var y0=h-lay.bandH+(lay.bandH-lay.lines.length*lay.lh)/2+lay.lh/2;
+    lay.lines.forEach(function(ln,i){ctx.fillText(ln,w/2,y0+i*lay.lh);});
+    ctx.restore();
+  };
+}
+// Watermark: text (with a contrasting outline so it reads on any photo) or the uploaded logo; corner / center / tiled.
+function shWatermarkPainter(w,h){
+  var wm=shOv.wm,short=Math.min(w,h),alpha=Math.max(0.05,Math.min(1,(wm.opacity||60)/100)),m=Math.round(short*0.03);
+  var blk,bw,bh;
+  if(wm.type==='logo'&&shLogoImg&&shLogoImg.naturalWidth){
+    bw=Math.max(4,Math.round(w*(wm.logoSize||22)/100));bh=Math.max(4,Math.round(bw*shLogoImg.naturalHeight/shLogoImg.naturalWidth));
+    if(bh>h*0.5){bh=Math.round(h*0.5);bw=Math.max(4,Math.round(bh*shLogoImg.naturalWidth/shLogoImg.naturalHeight));}
+    blk=document.createElement('canvas');blk.width=bw;blk.height=bh;blk.getContext('2d').drawImage(shLogoImg,0,0,bw,bh);
+  }else{
+    var txt=String(wm.text||'').trim()||'BarrelCo',px=Math.max(10,Math.round(short*(wm.textSize||6)/100));
+    var mc=shMctx(),font=function(p){return 'bold '+p+'px Arial, Helvetica, sans-serif';};
+    mc.font=font(px);var tw=Math.ceil(mc.measureText(txt).width);
+    while(tw>w*0.9&&px>8){px=Math.floor(px*0.9);mc.font=font(px);tw=Math.ceil(mc.measureText(txt).width);}
+    var pad=Math.ceil(px*0.14);bw=tw+pad*2;bh=Math.round(px*1.2)+pad*2;
+    blk=document.createElement('canvas');blk.width=bw;blk.height=bh;
+    var bc=blk.getContext('2d'),col=wm.color||'#ffffff';
+    bc.font=font(px);bc.textBaseline='middle';bc.textAlign='left';bc.lineJoin='round';
+    bc.lineWidth=Math.max(1,px*0.12);bc.strokeStyle=shHexLum(col)>0.4?'#000000':'#ffffff';
+    bc.strokeText(txt,pad,bh/2);bc.fillStyle=col;bc.fillText(txt,pad,bh/2);
+  }
+  var pos=wm.pos||'br';
+  return function(ctx){
+    ctx.save();ctx.globalAlpha=alpha;ctx.filter='none';
+    if(pos==='tile'){
+      var sx=Math.round(bw*1.7),sy=Math.round(bh*3.2),r=0;
+      for(var y=m;y<h;y+=sy,r++){for(var x=m+(r%2?Math.round(sx/2):0);x<w;x+=sx){ctx.drawImage(blk,x,y);}}
+    }else{
+      var x0=(pos==='tl'||pos==='bl')?m:pos==='c'?Math.round((w-bw)/2):w-bw-m;
+      var y0=(pos==='tl'||pos==='tr')?m:pos==='c'?Math.round((h-bh)/2):h-bh-m;
+      ctx.drawImage(blk,x0,y0);
+    }
+    ctx.restore();
+  };
+}
+function shOverlayPainter(w,h,tag){
+  if(tag==='idea')return shBannerPainter(w,h);
+  if(tag==='mine')return shWatermarkPainter(w,h);
+  return null;
+}
+// Post-step for a photo: takes the CLEAN shifted blob, returns a new blob with the overlay drawn on top (shiftImage itself is untouched).
+async function shOverlayImage(baseBlob,tag){
+  await shEnsureLogo();
+  var bmp=await createImageBitmap(baseBlob);
+  try{
+    var c=document.createElement('canvas');c.width=bmp.width;c.height=bmp.height;
+    var ctx=c.getContext('2d');ctx.drawImage(bmp,0,0);
+    var paint=shOverlayPainter(c.width,c.height,tag);if(paint)paint(ctx);
+    return await new Promise(function(res,rej){c.toBlob(function(b){b?res(b):rej(new Error('Could not encode image'));},'image/jpeg',0.95);});
+  }finally{if(bmp.close)bmp.close();}
+}
+
+// ── LISTING CARD (text section as before; photos/videos section is per-item with tags) ──
+function buildCard(r){
+  var card=document.createElement('div');
+  card.className='listing-card sh-combo';card.dataset.folder=r.folder;
+  var key=String(r.loc.id+'-'+(r.prod.id||r.pe.key)).replace(/[^A-Za-z0-9_-]/g,'_');
+  var body='';
+  if(r.text){
+    var tl=r.title.length,tc=tl<=70?'ok':tl<=80?'warn':'over';
+    body+='<div class="lf"><div class="lf-lbl">Title <span class="cc '+tc+'">'+tl+' chars</span><button class="copy-btn" data-copy="title-'+key+'">Copy</button></div>'
+      +'<div class="lf-content title-box" id="title-'+key+'">'+escH(r.title)+'</div></div>'
+      +'<div class="lf"><div class="lf-lbl">Description <button class="copy-btn" data-copy="desc-'+key+'">Copy</button></div>'
+      +'<div class="lf-content" id="desc-'+key+'">'+escH(r.desc)+'</div></div>'
+      +(r.group?'<div class="gpc"><div class="gpl">Group Post <button class="copy-btn" data-copy="gp-'+key+'">Copy</button></div>'
+      +'<div class="gp-content" id="gp-'+key+'">'+escH(r.group)+'</div></div>':'');
+  }else if(r.textErr){
+    body+='<div class="sh-note err">Listing text failed: '+escH(r.textErr)+'</div>';
+  }else if(r.wantText){
+    body+='<div class="sh-note">Photos only — custom products/locations have no listing text.</div>';
+  }
+  body+='<div class="sh-photos"></div>';
+  card.innerHTML='<div class="listing-hdr"><span class="listing-loc">'+escH(r.loc.name)+'</span><span class="listing-sku">'+escH(r.text?r.sku:r.pe.name)+'</span><div class="listing-hsp"></div></div>'
+    +'<div class="listing-body">'+body+'</div>';
+  shRenderPhotos(r,card.querySelector('.sh-photos'));
+  card.addEventListener('click',function(e){
+    if(e.target.closest('.save-photos-btn'))return;
+    var btn=e.target.closest('.copy-btn');
+    if(!btn||!btn.dataset.copy)return;
+    var el=document.getElementById(btn.dataset.copy);
+    if(!el)return;
+    navigator.clipboard.writeText(el.innerText).then(function(){
+      btn.textContent='Copied ✓';btn.classList.add('copied');
+      setTimeout(function(){btn.textContent='Copy';btn.classList.remove('copied');},2000);
+    });
+  });
+  return card;
+}
+function psFlatName(r,item){return (r.folder+' - '+item.fname).replace(/[\/\\:*?"<>|]/g,'');}
+function shRenderPhotos(c,host){
+  host.innerHTML='';
+  if(!c.items.length)return;
+  var ok=c.items.filter(function(i){return !i.error;}).length,bad=c.items.length-ok;
+  var lf=document.createElement('div');lf.className='lf';
+  lf.innerHTML='<div class="lf-lbl">Photos &amp; videos ('+ok+(bad?', <span style="color:var(--red)">'+bad+' failed</span>':'')+')'+(ok?' <button type="button" class="save-photos-btn copy-btn">📁 Save this folder</button>':'')+'</div>';
+  var grid=document.createElement('div');grid.className='vg';grid.style.marginTop='6px';
+  c.items.forEach(function(it){grid.appendChild(shBuildTile(c,it));});
+  lf.appendChild(grid);
+  var path=document.createElement('div');path.style.cssText='font-size:.6rem;color:var(--dim);margin-top:4px;';path.textContent='→ '+c.folder;
+  lf.appendChild(path);
+  host.appendChild(lf);
+  var sb=lf.querySelector('.save-photos-btn');
+  if(sb)sb.addEventListener('click',function(){shSaveCombos([c]);});
+}
+function shTileFill(c,it,card){
+  var idx=c.items.indexOf(it),busy=card.classList.contains('busy');
+  var media=it.isVid?'<video class="ps2-vid" src="'+it.url+'" controls playsinline preload="metadata"></video>':'<img src="'+it.url+'" alt="">';
+  card.innerHTML='<div class="sh-rtop"><span class="sh-rsel" role="checkbox" aria-label="Select this file"></span><span class="sh-tag sh-t-'+it.tag+'">'+SH_TAGNAME[it.tag]+(busy?' …':'')+'</span></div>'
+    +media+'<div class="vcf"><span class="vcn">v'+(idx+1)+' · '+psEsc(it.ext)+(it.warn?' ⚠':'')+'</span><button type="button" class="dlb">Save</button></div>';
+  var on=shResSel.has(it.id);
+  card.classList.toggle('rsel',on);
+  var s=card.querySelector('.sh-rsel');if(s)s.textContent=on?'✓':'';
+  if(it.warn)card.title=it.warn;
+}
+function shBuildTile(c,it){
+  var card=document.createElement('div');
+  if(it.error){
+    card.className='vc ps2-errc';
+    card.innerHTML='<div class="ps2-err">⚠ '+(it.isVid?'Video':'Photo')+' failed<br><b>'+psEsc(it.srcName)+'</b><br>'+psEsc(it.error)+'</div>';
+    return card;
+  }
+  card.className='vc sh-rtile';card.dataset.iid=it.id;it.tile=card;
+  if(!it.url)it.url=URL.createObjectURL(it.blob);
+  shTileFill(c,it,card);
+  card.addEventListener('click',function(e){
+    if(e.target.closest('.dlb')){
+      if(shTagBusy){shStat('Wait for the overlay encode to finish, then save.');return;}
+      triggerDL(it.blob,psFlatName(c,it));return;
+    }
+    if(e.target.closest('video')&&!e.target.closest('.sh-rsel'))return;
+    if(shResSel.has(it.id))shResSel.delete(it.id);else shResSel.add(it.id);
+    shResRefresh();
+  });
+  return card;
+}
+function shResRefresh(){
+  document.querySelectorAll('.sh-rtile').forEach(function(t){
+    var on=shResSel.has(t.dataset.iid);
+    t.classList.toggle('rsel',on);
+    var s=t.querySelector('.sh-rsel');if(s)s.textContent=on?'✓':'';
+  });
+  document.querySelectorAll('.sh-rcount').forEach(function(e){e.textContent=shResSel.size;});
+}
+function shStat(t){document.querySelectorAll('.sh-rstat').forEach(function(e){e.textContent=t||'';});}
+function shRevokeResults(){
+  shResults.forEach(function(c){c.items.forEach(function(it){if(it.url){try{URL.revokeObjectURL(it.url);}catch(e){}it.url=null;}});});
+  shResSel.clear();
+}
+function shBuildResBar(area){
+  var old=area.querySelector('.sh-resbar');if(old)old.remove();
+  var total=0,failed=0;
+  shResults.forEach(function(c){c.items.forEach(function(it){if(it.error)failed++;else total++;});});
+  if(!total&&!failed)return null;
+  var folders=shResults.filter(function(c){return c.items.some(function(i){return !i.error;});}).length;
+  var bar=document.createElement('div');bar.className='sh-resbar';
+  bar.innerHTML='<div class="rh"><div><div class="rt">Photos &amp; videos</div><div class="rm">'+folders+' folders · '+total+' files'+(failed?' · <span style="color:var(--red)">'+failed+' failed</span>':'')+'</div></div>'
+    +'<button type="button" class="sfb" data-r="saveall">📁 Save All to Folders</button></div>'
+    +'<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;"><label class="sh-clr"><input type="checkbox" class="sh-clrcb"'+(shClearFirst?' checked':'')+'> clear old files in each folder first</label>'
+    +'<button type="button" class="alb" data-r="chroot">Change save folder</button></div>'
+    +'<div class="sh-restools"><span class="sh-barl">Select</span><button type="button" data-r="all">All</button><button type="button" data-r="clear">Clear</button>'
+    +'<span class="sh-barl">Set tag on selected (<span class="sh-rcount">0</span>)</span>'
+    +'<button type="button" data-r="tag" data-tag="mine">Mine</button><button type="button" data-r="tag" data-tag="idea">Idea</button><button type="button" data-r="tag" data-tag="none">None</button></div>'
+    +'<div class="sh-hint" style="margin:0;">Tap thumbnails to select. Changing a tag re-draws the watermark / banner from the stored clean copy — no new random shift. Photos update instantly; videos re-encode in real time. Save always writes the current version.</div>'
+    +'<div class="sh-rstat" aria-live="polite"></div>';
+  bar.addEventListener('click',function(e){
+    var b=e.target.closest('button');if(!b)return;
+    var r=b.dataset.r;
+    if(r==='saveall')shSaveCombos(shResults);
+    else if(r==='chroot'){shRootHandle=null;shStat('The next save will ask which folder to use.');}
+    else if(r==='all'){shResults.forEach(function(c){c.items.forEach(function(it){if(!it.error)shResSel.add(it.id);});});shResRefresh();}
+    else if(r==='clear'){shResSel.clear();shResRefresh();}
+    else if(r==='tag')shApplyTag(b.dataset.tag);
+  });
+  bar.querySelector('.sh-clrcb').addEventListener('change',function(){shClearFirst=this.checked;});
+  area.insertBefore(bar,area.firstChild);
+  shResRefresh();
+  return bar;
+}
+
+// ── RESULT-LEVEL TAG CHANGE: re-draw the overlay from the stored clean shifted copy (no new random shift) ──
+async function shApplyTag(tag){
+  if(shTagBusy||psBusy)return;
+  var work=[];
+  shResults.forEach(function(c){c.items.forEach(function(it){if(!it.error&&shResSel.has(it.id)&&it.tag!==tag)work.push({c:c,it:it});});});
+  if(!work.length){shStat('Nothing to change — tap thumbnails to select first (selected ones may already have that tag).');return;}
+  shTagBusy=true;shUpdButtons();
+  var failed=0;
+  for(var i=0;i<work.length;i++){
+    var w=work[i],it=w.it,n=i+1;
+    if(it.tile){it.tile.classList.add('busy');shTileFill(w.c,it,it.tile);}
+    shStat('Applying '+SH_TAGNAME[tag]+' — '+n+' of '+work.length+(it.isVid&&tag!=='none'?' (video: re-encoding in real time)…':'…'));
+    try{
+      var nb;
+      if(tag==='none')nb=it.base;
+      else if(it.isVid){
+        var res=await shOverlayVideo(it.base,tag,it.dur,function(frac,dur){
+          shStat('Applying '+SH_TAGNAME[tag]+' — '+n+' of '+work.length+' · video '+Math.round(frac*100)+'% · ~'+Math.max(0,Math.ceil((1-frac)*dur))+'s left (real time)');
+        });
+        nb=res.blob;
+      }else nb=await psWithTimeout(shOverlayImage(it.base,tag),60000,'Overlay timed out');
+      it.blob=nb;it.tag=tag;it.ovErr='';
+      if(it.url){try{URL.revokeObjectURL(it.url);}catch(e){}}
+      it.url=URL.createObjectURL(it.blob);
+    }catch(err){
+      failed++;it.ovErr=(err&&err.message)||String(err);
+      shDbg('Overlay change failed: '+it.srcName+' — '+it.ovErr);
+    }
+    if(it.tile){it.tile.classList.remove('busy');shTileFill(w.c,it,it.tile);if(it.ovErr)it.tile.title='Overlay failed: '+it.ovErr;}
+  }
+  shTagBusy=false;shUpdButtons();
+  shStat('Done — '+(work.length-failed)+' updated'+(failed?', '+failed+' failed (kept the previous version)':'')+'. Save writes the current versions.');
+}
+
+// ── SAVE (File System Access API; falls back to downloads). Always writes the CURRENT (overlaid) blob of every item. ──
+async function shGetRoot(){
+  if(shRootHandle)return shRootHandle;
+  if(!window.showDirectoryPicker)return null;
+  try{shRootHandle=await window.showDirectoryPicker({mode:'readwrite'});return shRootHandle;}
+  catch(err){return (err&&err.name==='AbortError')?'abort':null;}
+}
+async function lfClearDir(dirHandle){
+  try{
+    var names=[];
+    for await (var entry of dirHandle.values()){ names.push(entry.name); }
+    for(var i=0;i<names.length;i++){ try{ await dirHandle.removeEntry(names[i]); }catch(e){} }
+  }catch(e){}
+}
+async function shWriteCombo(root,c){
+  var items=c.items.filter(function(i){return !i.error;});
+  if(!items.length)return {ok:0,bad:0};
+  var dir=await root.getDirectoryHandle(c.folder,{create:true});
+  if(shClearFirst)await lfClearDir(dir);
+  var ok=0,bad=0;
+  for(var i=0;i<items.length;i++){
+    try{
+      var fh=await dir.getFileHandle(items[i].fname,{create:true});
+      var wr=await fh.createWritable();
+      await wr.write(items[i].blob);await wr.close();ok++;
+    }catch(e){bad++;shDbg('Save failed: '+c.folder+' / '+items[i].fname+' — '+e.message);}
+  }
+  return {ok:ok,bad:bad};
+}
+async function shSaveCombos(list){
+  if(shTagBusy){shStat('Wait for the overlay encode to finish, then save.');return;}
+  list=list.filter(function(c){return c.items.some(function(i){return !i.error;});});
+  if(!list.length)return;
+  var root=await shGetRoot();
+  if(root==='abort')return;
+  if(!root){
+    var n=0;
+    for(var a=0;a<list.length;a++)for(var b=0;b<list[a].items.length;b++){var it=list[a].items[b];if(it.error)continue;triggerDL(it.blob,psFlatName(list[a],it));n++;await sleep(150);}
+    shStat('Downloaded '+n+' file'+(n===1?'':'s')+' (this browser cannot write into folders directly).');
+    return;
+  }
+  var ok=0,bad=0;shStat('Saving…');
+  try{
+    for(var k=0;k<list.length;k++){var r=await shWriteCombo(root,list[k]);ok+=r.ok;bad+=r.bad;}
+    shStat('Saved '+ok+' file'+(ok===1?'':'s')+' into '+list.length+' folder'+(list.length===1?'':'s')+' under "'+(root.name||'chosen folder')+'"'+(bad?' ('+bad+' failed to write)':''));
+  }catch(err){shStat('Save failed: '+err.message);shDbg('Save failed: '+err.message);}
+}
+
+// ── THE UNIFIED RUN ENGINE ──
+function shProgEls(origin){
+  return origin==='lf'?{pw:document.getElementById('lfPw'),pl:document.getElementById('lfPl'),pf:document.getElementById('lfPf')}
+    :{pw:document.getElementById('ps-pw'),pl:document.getElementById('ps-pl'),pf:document.getElementById('ps-pf')};
+}
+function shProg(origin,label,frac){
+  var e=shProgEls(origin);
+  if(e.pl)e.pl.textContent=label;
+  if(e.pf)e.pf.style.width=(Math.max(0,Math.min(1,frac||0))*100)+'%';
+}
+// One source file -> one shifted item. Keeps the CLEAN shifted blob (base) and the current output (blob, with overlay if tagged).
+async function shProcessOne(f,label,doneBefore,total,origin,usedNames){
+  var tag=f.tag||'none';
+  try{
+    if(f.isVid){
+      var res=await psShiftVideo(f.file,function(frac,dur){
+        shProg(origin,label+' — video '+Math.round(frac*100)+'% · ~'+Math.max(0,Math.ceil((1-frac)*dur))+'s left',(doneBefore+frac)/total);
+      },tag);
+      return {id:shUid(),base:res.blob,blob:res.ovBlob||res.blob,ext:res.ext,isVid:true,dur:res.dur,warn:res.warn,tag:tag,srcName:f.name,fname:psUniqueName('vid',res.ext,usedNames)};
+    }
+    await psValidateImage(f);
+    var ir=await psWithTimeout(shiftImage(f.file),60000,'Image processing timed out');
+    if(!ir||!ir.blob)throw new Error('Could not encode image');
+    var out=tag==='none'?ir.blob:await psWithTimeout(shOverlayImage(ir.blob,tag),60000,'Overlay timed out');
+    return {id:shUid(),base:ir.blob,blob:out,ext:ir.ext,isVid:false,tag:tag,srcName:f.name,fname:psUniqueName('img',ir.ext,usedNames)};
+  }catch(err){
+    return {id:shUid(),error:(err&&err.message)||String(err),isVid:f.isVid,srcName:f.name,tag:tag};
+  }
+}
+async function shRun(origin){
+  if(psBusy||shTagBusy)return;
+  var isLf=origin==='lf';
+  var doText=isLf&&shSwitch('text'),doPhotos=!isLf||shSwitch('photos');
+  var locs=shChkLocs(),prods=(psSel||[]).map(psProdByKey).filter(Boolean);
+  if(!locs.length||!prods.length||(!doText&&!doPhotos))return;
+  var used={},combos=[];
+  prods.forEach(function(p){
+    var srcs=doPhotos?psSelectedFor(p.key):[];   // ONLY this product's own box
+    locs.forEach(function(loc){
+      var folder=psFolderName(p.name,loc.name),base=folder,n=2;
+      while(used[folder.toLowerCase()])folder=base+' ('+(n++)+')';
+      used[folder.toLowerCase()]=1;
+      combos.push({pe:p,prod:p.prod||{id:p.key,name:p.name,code:''},loc:loc,folder:folder,srcs:srcs,items:[],text:false,textErr:'',wantText:doText,canText:!!(doText&&p.prod&&!loc.custom)});
+    });
+  });
+  combos=combos.filter(function(c){return c.srcs.length||c.canText;});
+  if(!combos.length)return;
+  // guard for long/large clips (video is re-encoded in real time)
+  var vidSec=0,bigClip=false;
+  combos.forEach(function(c){c.srcs.forEach(function(f){if(f.isVid){vidSec+=(isFinite(f.dur)?f.dur:30)*varCount;if(f.dur>PS_WARN_CLIP_SEC||f.file.size/1048576>PS_WARN_CLIP_MB)bigClip=true;}});});
+  if(vidSec>300||bigClip){
+    var okc=confirm('Video is re-encoded in real time: about '+Math.ceil(vidSec/60)+' min of processing for this run'+(bigClip?' (includes a long/large clip)':'')+'.\n\nKeep this tab open and visible until it finishes. Continue?');
+    if(!okc)return;
+  }
+  psBusy=true;shUpdButtons();
+  shRevokeResults();shResults=[];psImgOk={};
+  shClearFirst=isLf;   // ListingForge repost cadence clears old files; PhotoShift keeps its old add-only behaviour
+  var area=document.getElementById(isLf?'ra':'ps-ra');area.innerHTML='';
+  var es=document.getElementById(isLf?'emptyState':'ps-es');if(es)es.style.display='none';
+  var pe=shProgEls(origin);if(pe.pw)pe.pw.classList.add('act');
+  if(isLf&&locs.length>=4){
+    var w=document.createElement('div');w.className='timing-note';
+    w.innerHTML='<strong>⚠ Posting Reminder</strong>Never post all locations same day — FB flags it. Stagger across 2 days minimum. Baltimore Wednesday, Waynesboro/Winchester Thursday.';
+    area.appendChild(w);
+  }
+  var slots=combos.map(function(c,i){
+    var d=document.createElement('div');d.className='loading-card';
+    d.innerHTML='<div class="spinner"></div><div class="loading-txt">'+(i===0?'Working on ':'Queued: ')+escH(c.folder)+'…</div>';
+    area.appendChild(d);return d;
+  });
+  var textTotal=combos.filter(function(c){return c.canText;}).length,total=textTotal;
+  combos.forEach(function(c){total+=c.srcs.length*varCount;});
+  total=Math.max(total,1);
+  var done=0,usedNames={},textIdx=0,lastText=0;
+  var tLocs=locs.filter(function(l){return !l.custom;}),allLocNames=tLocs.map(function(l){return l.name;}).join(', ');
+  var oNote=((document.getElementById('oNote')||{}).value||'').trim();
+  usedDimIdx={};
+  try{
+    for(var ci=0;ci<combos.length;ci++){
+      var c=combos[ci];
+      if(c.canText){
+        var wait=1100-(Date.now()-lastText);
+        if(lastText&&wait>0)await sleep(wait);
+        shProg(origin,'Writing text — '+c.prod.code+' · '+c.loc.name,done/total);
+        try{
+          var t=await generateOne(c.prod,c.loc,oNote,textIdx,allLocNames,tLocs);
+          c.text=true;c.sku=t.sku;c.title=t.title;c.desc=t.desc;c.group=t.group;
+        }catch(err){
+          c.textErr=(err&&err.message)||String(err);
+          shDbg('Failed: '+c.prod.code+' / '+c.loc.name+' — '+c.textErr);
+        }
+        lastText=Date.now();textIdx++;done++;
+      }
+      for(var si=0;si<c.srcs.length;si++){
+        var f=c.srcs[si];
+        for(var vi=0;vi<varCount;vi++){
+          var label=c.folder+' — '+f.name+(varCount>1?' (v'+(vi+1)+'/'+varCount+')':'');
+          shProg(origin,label,done/total);
+          var item=await shProcessOne(f,label,done,total,origin,usedNames);
+          if(item.error)shDbg('Photo/video failed: '+c.folder+' / '+f.name+' — '+item.error);
+          c.items.push(item);done++;
+        }
+      }
+      shResults.push(c);
+      var card=buildCard(c);
+      if(slots[ci].parentNode===area)area.replaceChild(card,slots[ci]);else area.appendChild(card);
+    }
+    shProg(origin,'Done ✓',1);
+  }catch(err){
+    shProg(origin,'Stopped: '+((err&&err.message)||err),done/total);
+    shDbg('Run stopped: '+((err&&err.message)||err));
+  }finally{
+    psBusy=false;
+    slots.forEach(function(s){if(s.parentNode===area)s.remove();});
+    shBuildResBar(area);
+    shUpdButtons();
+    setTimeout(function(){if(pe.pw)pe.pw.classList.remove('act');},1000);
+  }
+}
+
+// ── LOAD / RESET WHEN THE VENTURE CHANGES (and once at startup) ──
+function shLoadVenture(){
+  shRevokeResults();shResults=[];
+  ['ra','ps-ra'].forEach(function(id){var a=document.getElementById(id);if(a)a.innerHTML='';});
+  ['emptyState','ps-es'].forEach(function(id){var e=document.getElementById(id);if(e)e.style.display='';});
+  shLocSel={};shTagSel.clear();
+  shLoadCustomLocs();shMigrateOldLocs();
+  psLoadProductsForVenture();   // renders products, upload boxes, locations, button state
+  shOvLoad();shOvSync();shOvPreview();
+  shRenderMigNote();shRenderLocs();shSelChanged();
+}
+</script>
+
+<script>
 var BC_CURRENT = 'listingforge';
 
 function bcNav(app) {
