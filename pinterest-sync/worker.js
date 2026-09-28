@@ -28,6 +28,19 @@ export default {
     const url = new URL(request.url);
     try {
       if (url.pathname === "/health") return json({ ok: true });
+      // TEMPORARY diagnostic: shows which settings the running Worker actually received
+      // (yes/no and token length only, never values). Remove once setup is confirmed.
+      if (url.pathname === "/diag") {
+        const h = request.headers.get("Authorization") || "";
+        return json({
+          hasSyncToken: !!env.SYNC_TOKEN,
+          syncTokenLength: env.SYNC_TOKEN ? env.SYNC_TOKEN.length : 0,
+          headerTokenLength: h.startsWith("Bearer ") ? h.length - 7 : 0,
+          hasGoogleKey: !!env.GOOGLE_SA_KEY,
+          hasRootFolder: !!env.DRIVE_ROOT_FOLDER_ID,
+          hasKv: !!env.SEEN,
+        });
+      }
       if (!authorized(request, env)) return json({ error: "unauthorized" }, 401);
 
       if (url.pathname === "/boards") return json({ boards: Object.keys(BOARDS) });
