@@ -2060,7 +2060,7 @@ function psRenderBoxes(){
     box.innerHTML='<div class="slbl"><span>'+psEsc(p.name)+'</span><span>Files (<span class="ps2-fc">0</span>)</span></div>'+
       '<div class="uz"><input type="file" class="ps2-fi" accept="image/*,video/*" multiple>'+
       '<div class="uz-ico">📁</div><div class="uz-txt"><strong>Drop '+psEsc(p.name)+' files or click</strong>JPG PNG WEBP MP4 MOV</div></div>'+
-      '<div class="shelf ps2-shelf"></div>';
+      '<div class="sh-bar"></div><div class="shelf ps2-shelf"></div>';
     var uzEl=box.querySelector('.uz'), fi=box.querySelector('.ps2-fi');
     fi.addEventListener('change',function(){handleFiles(fi.files,key);fi.value='';});
     uzEl.addEventListener('click',function(e){if(e.target===uzEl||e.target.classList.contains('uz-txt')||e.target.classList.contains('uz-ico')||e.target.tagName==='STRONG'){fi.click();}});
