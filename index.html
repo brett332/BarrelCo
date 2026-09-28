@@ -2305,6 +2305,7 @@ function shVideoCore(file,cfg){
     v.onloadedmetadata=function(){
       try{
         dur=v.duration;
+        if(!isFinite(dur)&&isFinite(cfg.durHint))dur=cfg.durHint; // recorder-made clips often report Infinity
         if(!isFinite(dur)||dur<=0)return fail('Video has no readable duration');
         if(dur>PS_MAX_CLIP_SEC)return fail('Clip is longer than '+Math.round(PS_MAX_CLIP_SEC/60)+' min — split it first');
         // Chrome applies rotation metadata: videoWidth/Height are the DISPLAYED (already-rotated) size.
