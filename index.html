@@ -2263,6 +2263,9 @@ document.addEventListener('drop',function(e){e.preventDefault();});
 <script>
 // ── STATE ──────────────────────────────────────────────────────────────────
 var files=[], selIds=new Set(), varCount=1, results=[];
+// PhotoShift per-product state (declared up here because the init IIFE below runs before later code)
+var psSel=[], psFiles={}, psCustom=[], psUrls=[], psBusy=false;
+var PS_MAX_CLIP_SEC=1800, PS_WARN_CLIP_SEC=120, PS_WARN_CLIP_MB=250;
 var DEFAULT_LOCS=['Baltimore_N','Baltimore_S','Baltimore_E','Baltimore_W','Baltimore_Laurel','Winchester','Waynesboro','Rural'];
 
 // ── INIT ───────────────────────────────────────────────────────────────────
