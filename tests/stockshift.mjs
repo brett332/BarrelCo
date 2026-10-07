@@ -22,6 +22,7 @@ const keys = await page.evaluate(() => Object.keys(localStorage));
 ok('storage keys discovered', () => assert.ok(locs && prods && inv, 'keys: ' + keys));
 ok('cabin location present', () => assert.ok(locs.some(l => l.id === 'cabin_wv')));
 ok('sphere product present, originals kept', () => { assert.ok(prods.some(p => p.id === 'p_sph')); assert.ok(prods.some(p => p.id === 'p_ob2')); assert.equal(locs.filter(l => l.id !== 'cabin_wv').length, 12); });
+ok('mini barrel product seeded (MB, $125 at cabin)', () => { assert.ok(prods.some(p => p.id === 'p_mini' && p.code === 'MB')); assert.equal(pr['p_mini|cabin_wv'].price, 125); });
 ok('cabin prices 95/65/60', () => assert.deepEqual([pr['p_ob2|cabin_wv'].price, pr['p_op|cabin_wv'].price, pr['p_sph|cabin_wv'].price], [95, 65, 60]));
 ok('cabin counts pulled from Sheet 4/7/4', () => assert.deepEqual([inv['p_ob2|cabin_wv'], inv['p_op|cabin_wv'], inv['p_sph|cabin_wv']], [4, 7, 4]));
 // a web order lowers the Sheet; StockShift (stale local) must follow on next foreground
