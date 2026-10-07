@@ -192,10 +192,19 @@ function json(data, status) {
   });
 }
 
+// Google requires JWT segments in base64url (no +, /, or = padding). Plain btoa()
+// output is rejected with "Invalid signature for token".
+function b64url(bytes) {
+  let bin = '';
+  const arr = bytes instanceof Uint8Array ? bytes : new TextEncoder().encode(bytes);
+  for (let i = 0; i < arr.length; i += 0x8000) bin += String.fromCharCode.apply(null, arr.subarray(i, i + 0x8000));
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
 async function getSheetToken(env) {
   const now = Math.floor(Date.now() / 1000);
-  const header = btoa(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
-  const claim = btoa(JSON.stringify({
+  const header = b64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  const claim = b64url(JSON.stringify({
     iss: env.SERVICE_ACCOUNT_EMAIL,
     scope: 'https://www.googleapis.com/auth/spreadsheets',
     aud: 'https://oauth2.googleapis.com/token',
@@ -206,7 +215,7 @@ async function getSheetToken(env) {
   const key = await importPrivateKey(env.SERVICE_ACCOUNT_KEY);
   const sig = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key,
     new TextEncoder().encode(unsigned));
-  const jwt = `${unsigned}.${btoa(String.fromCharCode(...new Uint8Array(sig)))}`;
+  const jwt = `${unsigned}.${b64url(new Uint8Array(sig))}`;
   const resp = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
