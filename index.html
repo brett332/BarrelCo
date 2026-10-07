@@ -2919,9 +2919,13 @@ function ensureCabinSeed() {
     products.push({ id: 'p_sph', name: 'Barrel Spheres', code: 'SPH', price: 60, threshold: 1 });
     pChanged = true;
   }
+  if (!products.some(function(p){ return p.id === 'p_mini'; })) {
+    products.push({ id: 'p_mini', name: 'Mini Barrel', code: 'MB', price: 125, threshold: 0 });
+    pChanged = true;
+  }
   if (pChanged) save('products');
   if (lChanged) save('locations');
-  const shopPrices = { p_ob2: 95, p_op: 65, p_sph: 60 };
+  const shopPrices = { p_ob2: 95, p_op: 65, p_sph: 60, p_mini: 125 };
   let prChanged = false;
   Object.keys(shopPrices).forEach(function(pid){
     const k = priceKey(pid, CABIN_LID);
