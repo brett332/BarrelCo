@@ -219,11 +219,25 @@ async function getSheetToken(env) {
   return data.access_token;
 }
 
+// Accepts the key however it got pasted into the dashboard: real PEM, PEM with
+// literal "\n" sequences (copied out of the JSON key file), wrapped in quotes,
+// or the whole service-account JSON. Fails with a clear message otherwise.
 async function importPrivateKey(pem) {
-  const b64 = pem.replace(/-----[^-]+-----/g, '').replace(/\s+/g, '');
-  const der = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-  return crypto.subtle.importKey('pkcs8', der,
-    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
+  let k = String(pem || '').trim();
+  if (!k) throw new Error('SERVICE_ACCOUNT_KEY is empty or not set');
+  if (k.startsWith('{')) {
+    try { k = String(JSON.parse(k).private_key || ''); }
+    catch (e) { throw new Error('SERVICE_ACCOUNT_KEY looks like JSON but could not be parsed: ' + e.message); }
+  }
+  k = k.replace(/^["']+|["']+$/g, '').replace(/\\n/g, '\n');
+  const b64 = k.replace(/-----[^-]+-----/g, '').replace(/\s+/g, '');
+  let der;
+  try { der = Uint8Array.from(atob(b64), c => c.charCodeAt(0)); }
+  catch (e) { throw new Error('SERVICE_ACCOUNT_KEY is not a valid PEM private key (could not base64-decode it)'); }
+  try {
+    return await crypto.subtle.importKey('pkcs8', der,
+      { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
+  } catch (e) { throw new Error('SERVICE_ACCOUNT_KEY is not a valid PEM private key (' + e.message + ')'); }
 }
 
 async function readSheet(env, token, tab) {
