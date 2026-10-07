@@ -2873,6 +2873,7 @@ function init() {
   // empty and Brett builds them out via the Setup tab's add/delete UI.
   if (products.length === 0 && CURRENT_VENTURE === 'barrelco')  seedDefaultProducts();
   if (locations.length === 0 && CURRENT_VENTURE === 'barrelco') seedDefaultLocations();
+  ensureCabinSeed();
   saveDefaultPrices();
 
   if (document.getElementById('webhookUrl')) {
@@ -2900,6 +2901,33 @@ function seedDefaultProducts() {
     { id: 'p_pp2',  name: 'HD Plastic Planters Large',        code: 'PP2',  price: 0,   threshold: 3 },
   ];
   save('products');
+}
+
+// Milam Ridge cabin shop link (Oct 2026): the public order site decrements the
+// Sheet's Inventory rows at location 'cabin_wv', so StockShift needs that
+// location + the three shop products (barrel=OB2, planter=OP, sphere=SPH) and
+// their shop prices. Idempotent; BarrelCo venture only.
+const CABIN_LID = 'cabin_wv';
+function ensureCabinSeed() {
+  if (CURRENT_VENTURE !== 'barrelco') return;
+  let pChanged = false, lChanged = false;
+  if (!locations.some(function(l){ return l.id === CABIN_LID; })) {
+    locations.push({ id: CABIN_LID, name: 'Cabin (Milam Ridge WV)', cityCode: 'CAB', subCode: '', rotWeek: 0 });
+    lChanged = true;
+  }
+  if (!products.some(function(p){ return p.id === 'p_sph'; })) {
+    products.push({ id: 'p_sph', name: 'Barrel Spheres', code: 'SPH', price: 60, threshold: 1 });
+    pChanged = true;
+  }
+  if (pChanged) save('products');
+  if (lChanged) save('locations');
+  const shopPrices = { p_ob2: 95, p_op: 65, p_sph: 60 };
+  let prChanged = false;
+  Object.keys(shopPrices).forEach(function(pid){
+    const k = priceKey(pid, CABIN_LID);
+    if (!prices[k]) { prices[k] = { price: shopPrices[pid], discount: 0 }; prChanged = true; }
+  });
+  if (prChanged) save('prices');
 }
 
 function seedDefaultLocations() {
@@ -2945,7 +2973,12 @@ function syncInventoryToSheet(pid, lid, count) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ pid, lid, count, ts: new Date().toISOString(), venture: CURRENT_VENTURE }),
-  }).catch(function(e){ console.warn('Inventory sheet sync failed', e); });
+  }).then(function(r){
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+  }).catch(function(e){
+    console.warn('Inventory sheet sync failed', e);
+    showToast('⚠ Count did NOT save to the Sheet (' + e.message + ') — try again', 'red');
+  });
 }
 
 function syncHistoryToSheet(entry) {
@@ -2953,7 +2986,12 @@ function syncHistoryToSheet(entry) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(Object.assign({}, entry, { venture: CURRENT_VENTURE })),
-  }).catch(function(e){ console.warn('History sheet sync failed', e); });
+  }).then(function(r){
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+  }).catch(function(e){
+    console.warn('History sheet sync failed', e);
+    showToast('⚠ History entry did NOT save to the Sheet (' + e.message + ')', 'red');
+  });
 }
 
 // Pulls the Sheet's rows for the active venture into local state on load.
@@ -2961,20 +2999,33 @@ function syncHistoryToSheet(entry) {
 // in counts/history this device doesn't already have, so this is safe to
 // call every time StockShift boots or the venture switches.
 function ssSyncFromSheet() {
-  fetch(SS_WORKER_BASE + '/inventory').then(function(r){ return r.json(); }).then(function(data){
-    const rows = (data.values || []).slice(1);
+  fetch(SS_WORKER_BASE + '/inventory').then(function(r){
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  }).then(function(data){
+    if (!data || !Array.isArray(data.values)) throw new Error('unexpected response');
+    const rows = data.values.slice(1);
     let changed = false;
     rows.forEach(function(r){
       const pid = r[0], lid = r[1], count = parseInt(r[2]) || 0, venture = r[4] || 'barrelco';
       if (venture !== CURRENT_VENTURE) return;
       const k = invKey(pid, lid);
-      if (inventory[k] === undefined) { inventory[k] = count; changed = true; }
+      // The cabin's Sheet row is the source of truth: web orders change it
+      // without StockShift knowing, so always take the Sheet's number there.
+      if (inventory[k] === undefined || (lid === CABIN_LID && inventory[k] !== count)) { inventory[k] = count; changed = true; }
     });
     if (changed) { save('inventory'); renderInventory(); }
-  }).catch(function(){});
+  }).catch(function(e){
+    console.warn('Inventory pull failed', e);
+    showToast('⚠ Could not load counts from the Sheet (' + e.message + ') — numbers may be out of date', 'red');
+  });
 
-  fetch(SS_WORKER_BASE + '/history').then(function(r){ return r.json(); }).then(function(data){
-    const rows = (data.values || []).slice(1);
+  fetch(SS_WORKER_BASE + '/history').then(function(r){
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  }).then(function(data){
+    if (!data || !Array.isArray(data.values)) throw new Error('unexpected response');
+    const rows = data.values.slice(1);
     const existingIds = new Set(history.map(function(h){ return h.id; }));
     let changed = false;
     rows.forEach(function(r){
@@ -2997,8 +3048,17 @@ function ssSyncFromSheet() {
       save('history');
       renderHistory();
     }
-  }).catch(function(){});
+  }).catch(function(e){
+    console.warn('History pull failed', e);
+    showToast('⚠ Could not load history from the Sheet (' + e.message + ')', 'red');
+  });
 }
+
+// Web orders from the cabin shop change counts while this tab sits open;
+// re-pull whenever the app comes back to the foreground.
+document.addEventListener('visibilitychange', function(){
+  if (document.visibilityState === 'visible' && typeof ssSyncFromSheet === 'function' && CURRENT_VENTURE === 'barrelco') ssSyncFromSheet();
+});
 
 // Full listing code: BAL-OB2-NL1 format
 function getListingCode(product, location) {
