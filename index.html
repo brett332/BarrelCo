@@ -2919,6 +2919,24 @@ function ensureCabinSeed() {
     products.push({ id: 'p_sph', name: 'Barrel Spheres', code: 'SPH', price: 60, threshold: 1 });
     pChanged = true;
   }
+  // Stock locations + products used by the Sheet's Entry tab (Oct 2026). Ids match
+  // the Sheet's Locations / Catalog tabs. Added only if missing, never changed.
+  [['loc_woodlawn_md', 'Woodlawn MD Storage', 'WLM'], ['loc_waynesboro_va', 'Waynesboro VA (stock)', 'WAV'],
+   ['loc_cf', 'Community Forklift (consignment)', 'CFK'], ['loc_slanesville_wv', 'Slanesville WV (driver load point)', 'SLV']
+  ].forEach(function(x){
+    if (!locations.some(function(l){ return l.id === x[0]; })) {
+      locations.push({ id: x[0], name: x[1], cityCode: x[2], subCode: '', rotWeek: 0 });
+      lChanged = true;
+    }
+  });
+  [['p_mini', 'Mini Barrel', 'MINI'], ['p_sp', 'Barrel Planter with Wooden Legs', 'SP'], ['p_ww', 'Wagon Wheel', 'WW'],
+   ['p_sack', 'Burlap/Jute Coffee Sack', 'SACK'], ['p_ring', 'Barrel Ring', 'RING'], ['p_cookie', 'Wood Slice (Cookie)', 'COOKIE']
+  ].forEach(function(x){
+    if (!products.some(function(p){ return p.id === x[0]; })) {
+      products.push({ id: x[0], name: x[1], code: x[2], price: 0, threshold: 1 });
+      pChanged = true;
+    }
+  });
   if (pChanged) save('products');
   if (lChanged) save('locations');
   const shopPrices = { p_ob2: 95, p_op: 65, p_sph: 60 };
