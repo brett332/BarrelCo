@@ -49,6 +49,20 @@ export default {
   }
 };
 
+async function runScheduled(env) {
+  let token;
+  try {
+    token = await getSheetToken(env);
+    return await runEntryProcessors(env, token, { sheetsFetch, appendRow, historyRow, colLetter });
+  } catch (err) {
+    console.error('barrel-co scheduled error:', err && err.stack || err);
+    if (token) {
+      try { await appendRow(env, token, 'Debug', ['entry', ('scheduled run failed: ' + (err && err.message || err)).slice(0, 900), new Date().toISOString()], true); }
+      catch (_) { /* Worker log above is the last resort */ }
+    }
+  }
+}
+
 async function handleRequest(request, env) {
     if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
 
