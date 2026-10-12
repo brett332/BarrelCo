@@ -32,6 +32,11 @@ const CORS = {
 };
 
 export default {
+  // Cron (every minute, see wrangler.toml): applies new rows on the Entry tab
+  // (and the optional Waynesboro sheet named in the Config tab) to Inventory/History.
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(runScheduled(env));
+  },
   async fetch(request, env) {
     try {
       return await handleRequest(request, env);
