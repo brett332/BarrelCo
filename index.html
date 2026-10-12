@@ -3028,9 +3028,10 @@ function ssSyncFromSheet() {
       const pid = r[0], lid = r[1], count = parseInt(r[2]) || 0, venture = r[4] || 'barrelco';
       if (venture !== CURRENT_VENTURE) return;
       const k = invKey(pid, lid);
-      // The cabin's Sheet row is the source of truth: web orders change it
-      // without StockShift knowing, so always take the Sheet's number there.
-      if (inventory[k] === undefined || (lid === CABIN_LID && inventory[k] !== count)) { inventory[k] = count; changed = true; }
+      // The Sheet is the source of truth for every location: web orders and the
+      // Sheet's Entry tab change it without StockShift knowing (StockShift's own
+      // edits are posted to the Sheet immediately), so always take the Sheet's number.
+      if (inventory[k] === undefined || inventory[k] !== count) { inventory[k] = count; changed = true; }
     });
     if (changed) { save('inventory'); renderInventory(); }
   }).catch(function(e){
