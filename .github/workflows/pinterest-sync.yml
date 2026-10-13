@@ -1,10 +1,9 @@
 name: pinterest-sync
 
-# Every Sunday ~9am US Eastern (13:00 UTC in summer, 14:00 in winter is fine too),
-# plus a manual "Run workflow" button in the Actions tab.
+# NO TIMER HERE (decision Oct 13 2026: no cron anywhere; Apps Script is the only clock).
+# The weekly Pinterest sync is run by the master scheduler (RidgeCo repo, apps-script/hub-scheduler, job "pinterest_sync"),
+# which calls the pinterest-sync Worker directly. This workflow stays only as a manual "Run workflow" button in the Actions tab.
 on:
-  schedule:
-    - cron: "0 13 * * 0"
   workflow_dispatch:
 
 jobs:

@@ -23,20 +23,17 @@
 // bumping `version`.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { runEntryProcessors } from './entry.js';
+import { runEntryProcessors, peekEntry, readConfig } from './entry.js';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type,x-secret',
+  'Access-Control-Allow-Headers': 'Content-Type,x-secret,x-auth-token',
 };
 
 export default {
-  // Cron (every minute, see wrangler.toml): applies new rows on the Entry tab
-  // (and the optional Waynesboro sheet named in the Config tab) to Inventory/History.
-  async scheduled(event, env, ctx) {
-    ctx.waitUntil(runScheduled(env));
-  },
+  // NO scheduled() on purpose: the whole system has no cron anywhere. The Entry-sheet processor is run by the master
+  // scheduler (Apps Script, RidgeCo repo apps-script/hub-scheduler) calling POST /entry/run below.
   async fetch(request, env) {
     try {
       return await handleRequest(request, env);
@@ -49,17 +46,34 @@ export default {
   }
 };
 
-async function runScheduled(env) {
-  let token;
+// POST /entry/run - applies new rows on the Entry tab (and the optional Waynesboro sheet named in the Config tab) to
+// Inventory/History. Called by the master scheduler (Apps Script). Auth: header X-Auth-Token must equal the Config-tab row
+// Entry_Run_Token (written by the scheduler's setup; never in code or env). {dry_run:true} only counts waiting rows.
+// Answers {ok:true, report:[...]} / {ok:true, dry_run:true, waiting:{...}}; a Worker-level failure is {ok:false,...} 5xx
+// and is also written to the Debug tab, so nothing fails silently.
+function sameToken(a, b) {
+  a = String(a || ''); b = String(b || '');
+  if (!a || a.length !== b.length) return false;
+  let d = 0; for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return d === 0;
+}
+async function entryRun(request, env, token) {
+  const deps = { sheetsFetch, appendRow, historyRow, colLetter };
+  const cfg = await readConfig(env, token, deps);
+  const want = cfg.Entry_Run_Token || '';
+  if (!want) return json({ ok: false, error: 'entry_run_token_not_set', detail: 'Config tab has no Entry_Run_Token row - run setup in the master scheduler.' }, 503);
+  if (!sameToken(request.headers.get('X-Auth-Token'), want)) return json({ ok: false, error: 'unauthorized' }, 401);
+  let body = {};
+  try { body = await request.json(); } catch (_) { body = {}; }
   try {
-    token = await getSheetToken(env);
-    return await runEntryProcessors(env, token, { sheetsFetch, appendRow, historyRow, colLetter });
+    if (body && body.dry_run === true) return json({ ok: true, dry_run: true, waiting: await peekEntry(env, token, deps) });
+    const report = await runEntryProcessors(env, token, deps);
+    return json({ ok: true, report });
   } catch (err) {
-    console.error('barrel-co scheduled error:', err && err.stack || err);
-    if (token) {
-      try { await appendRow(env, token, 'Debug', ['entry', ('scheduled run failed: ' + (err && err.message || err)).slice(0, 900), new Date().toISOString()], true); }
-      catch (_) { /* Worker log above is the last resort */ }
-    }
+    console.error('barrel-co /entry/run error:', err && err.stack || err);
+    try { await appendRow(env, token, 'Debug', ['entry', ('/entry/run failed: ' + (err && err.message || err)).slice(0, 900), new Date().toISOString()], true); }
+    catch (_) { /* Worker log above is the last resort */ }
+    return json({ ok: false, error: 'entry_run_failed', detail: String(err && err.message || err).slice(0, 300) }, 500);
   }
 }
 
@@ -96,6 +110,10 @@ async function handleRequest(request, env) {
     }
     if (path === '/public/order' && request.method === 'POST') {
       return await shopOrder(request, env, token);
+    }
+
+    if (path === '/entry/run' && request.method === 'POST') {
+      return await entryRun(request, env, token);
     }
 
     if (path === '/public/entities-feed' && request.method === 'GET') {

@@ -15,12 +15,8 @@ compatibility_date = "2026-06-08"
 keep_vars = true
 workers_dev = true
 
-# Entry-sheet processor (entry.js) needs a cron trigger, e.g.:
-#   [triggers]
-#   crons = ["* * * * *"]
-# Left OFF on purpose: the Cloudflare account is on the Workers Free plan, which allows
-# only 5 cron triggers per account and they are all in use, so adding it makes every
-# deploy end in "Trigger configuration partially updated" (code deploys, build shows failed).
-# Re-add once the plan is upgraded or a trigger is freed (build #a8419ded, Oct 12 2026).
+# NO cron triggers, ever (decision Oct 13 2026: Apps Script is the only clock). The Entry-sheet processor
+# (entry.js) is run by the master scheduler (RidgeCo repo, apps-script/hub-scheduler) calling POST /entry/run
+# every 15 minutes; the token it uses is the Config-tab row Entry_Run_Token.
 
 # Git auto-deploy connected via Cloudflare Workers Builds.
