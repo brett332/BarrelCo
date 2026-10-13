@@ -1,8 +1,8 @@
 # pinterest-sync — Pinterest boards -> Google Drive folders.
 # Separate Worker from barrel-co; deployed via Cloudflare Workers Builds
 # with root directory "pinterest-sync". keep_vars preserves dashboard secrets.
-# No cron trigger on purpose (account is at its cron limit); a weekly GitHub
-# Actions workflow calls this Worker instead.
+# No cron trigger, ever: the master scheduler (Apps Script, RidgeCo repo apps-script/hub-scheduler) calls this
+# Worker's /boards and /sync weekly. The GitHub workflow is a manual button only.
 name = "pinterest-sync"
 main = "worker.js"
 compatibility_date = "2026-06-08"

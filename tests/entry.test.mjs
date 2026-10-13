@@ -18,12 +18,20 @@ function seed() {
     ['cabin_wv', 'Cabin (Milam Ridge WV)', 'own', '0', ''], ['loc_woodlawn_md', 'Woodlawn MD Storage', 'own', '800', ''],
     ['loc_waynesboro_va', 'Waynesboro VA', 'own', '0', '']]);
   sheets.tab('Entry', [HEAD.slice()]);
+  sheets.tab('Config', [['Key', 'Value'], ['Entry_Run_Token', TOKEN]]);
   mom = null;
 }
 const entry = (...rows) => rows.forEach(r => { const row = Array(10).fill(''); r.forEach((v, i) => { row[i] = v; }); sheets.tabs.get('Entry').push(row); });
 const E = (action, loc, prod, qty, extra = {}) => [action, loc, prod, String(qty), extra.to || '', extra.price || '', extra.note || ''];
 const status = (n = 1) => { const r = sheets.tabs.get('Entry')[n]; return { status: r[7], result: r[8], at: r[9] }; };
-async function run(w = worker, e = env) { let p; await w.scheduled({}, e, { waitUntil: x => { p = x; } }); return p; }
+const TOKEN = 'test-entry-token-123';
+let lastRes = null;
+// The processor is now run by the master scheduler calling POST /entry/run (no cron). run() does exactly that.
+async function run(w = worker, e = env, body = {}, token = TOKEN) {
+  const r = await w.fetch(new Request('https://w/entry/run', { method: 'POST', headers: { 'X-Auth-Token': token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }), e);
+  lastRes = { status: r.status, body: await r.json() };
+  return lastRes;
+}
 const hist = () => sheets.objects('History');
 const debug = () => sheets.objects('Debug').filter(d => d.app === 'entry');
 
@@ -157,6 +165,57 @@ await test('Status/Result/Processed At must be adjacent', async () => {
   entry(E('Received', 'cabin_wv', 'OB2', 4)); await run();
   assert.equal(sheets.invCount('p_ob2'), 4); assert.match(debug()[0].msg, /adjacent/);
 });
+await test('no Config tab at all: endpoint says the token is not set (503), changes nothing', async () => {
+  sheets.tabs.delete('Config'); entry(E('Received', 'cabin_wv', 'OB2', 4));
+  const r = await run(); assert.equal(r.status, 503); assert.equal(r.body.ok, false); assert.equal(r.body.error, 'entry_run_token_not_set');
+  assert.equal(sheets.invCount('p_ob2'), 4); assert.equal(status().status, '');
+});
+await test('Config tab without Entry_Run_Token: 503', async () => {
+  sheets.tab('Config', [['Key', 'Value']]); const r = await run(); assert.equal(r.status, 503);
+});
+await test('wrong token: 401 and nothing applied', async () => {
+  entry(E('Received', 'cabin_wv', 'OB2', 4)); const r = await run(worker, env, {}, 'nope'); assert.equal(r.status, 401); assert.equal(r.body.ok, false);
+  assert.equal(sheets.invCount('p_ob2'), 4); assert.equal(status().status, '');
+});
+await test('missing token header: 401', async () => {
+  const r = await worker.fetch(new Request('https://w/entry/run', { method: 'POST', body: '{}' }), env); assert.equal(r.status, 401);
+});
+await test('GET /entry/run is not a route (404)', async () => {
+  const r = await worker.fetch(new Request('https://w/entry/run', { headers: { 'X-Auth-Token': TOKEN } }), env); assert.equal(r.status, 404);
+});
+await test('success answer shape: {ok:true, report:[{label:main, ok:1}]}', async () => {
+  entry(E('Received', 'cabin_wv', 'OB2', 4)); const r = await run(); assert.equal(r.status, 200); assert.equal(r.body.ok, true);
+  assert.equal(r.body.report[0].label, 'main'); assert.equal(r.body.report[0].ok, 1);
+});
+await test('dry_run counts waiting rows and changes nothing', async () => {
+  entry(E('Received', 'cabin_wv', 'OB2', 4), E('Sold', 'cabin_wv', 'OB2', 1), ['', '', '', '', '', '', '', 'OK', 'old', 'x']);
+  const r = await run(worker, env, { dry_run: true }); assert.equal(r.status, 200); assert.equal(r.body.dry_run, true);
+  assert.deepEqual(r.body.waiting.main, { waiting: 2, stuck: 0 });
+  assert.equal(sheets.invCount('p_ob2'), 4); assert.equal(status(1).status, ''); assert.equal(hist().length, 0);
+});
+await test('dry_run reports stuck rows and a broken extra sheet without failing', async () => {
+  const undo = withMom();
+  try {
+    entry(E('Received', 'cabin_wv', 'OB2', 4)); sheets.tabs.get('Entry')[1][7] = 'PROCESSING';
+    mom.tabs.delete('Sales');
+    const r = await run(worker, env, { dry_run: true }); assert.equal(r.status, 200);
+    assert.equal(r.body.waiting.main.stuck, 1); assert.ok(r.body.waiting.waynesboro.error);
+  } finally { undo(); }
+});
+await test('Sheets down while reading the token: 5xx {ok:false}, nothing applied (caller sees the failure)', async () => {
+  entry(E('Received', 'cabin_wv', 'OB2', 4)); sheets.failNext(/GET .*values\/Config/, 500, 99);
+  const r = await run(); assert.ok(r.status >= 500); assert.equal(r.body.ok, false); assert.equal(sheets.invCount('p_ob2'), 4);
+});
+await test('a sheet-level problem (Entry tab unreadable) is inside the report, not hidden', async () => {
+  sheets.failNext(/GET .*values\/Entry/, 503, 99);
+  const r = await run(); assert.equal(r.status, 200); assert.equal(r.body.ok, true); assert.ok(r.body.report[0].error); assert.ok(debug().length >= 1);
+});
+await test('no scheduled() handler and no cron anywhere in BarrelCo', async () => {
+  assert.equal(typeof worker.scheduled, 'undefined');
+  const fs = await import('node:fs');
+  assert.ok(!/^\s*crons\s*=/m.test(fs.readFileSync(new URL('../wrangler.toml', import.meta.url), 'utf8')));
+  for (const f of ['../.github/workflows/pinterest-sync.yml']) { const t = fs.readFileSync(new URL(f, import.meta.url), 'utf8'); assert.ok(!/^\s*schedule:/m.test(t) && !/cron:/.test(t)); assert.match(t, /workflow_dispatch:/); }
+});
 await test('no Config tab and empty Entry: quiet no-op', async () => {
   await run(); assert.equal(debug().length, 0); assert.equal(hist().length, 0);
 });
@@ -164,7 +223,7 @@ await test('no Config tab and empty Entry: quiet no-op', async () => {
 function withMom() {
   mom = new FakeSheets();
   mom.tab('Sales', [['Product', 'Qty', 'Price', 'Note', 'Status', 'Result', 'Processed At']]);
-  sheets.tab('Config', [['Key', 'Value'], ['WaynesboroEntrySheetId', 'MOM789']]);
+  sheets.tab('Config', [['Key', 'Value'], ['Entry_Run_Token', TOKEN], ['WaynesboroEntrySheetId', 'MOM789']]);
   const orig = globalThis.fetch;
   globalThis.fetch = async (url, opts) => String(url).includes('/spreadsheets/MOM789') ? mom.handle(String(url).replace('MOM789', 'SHEET123'), opts || {}) : orig(url, opts);
   return () => { globalThis.fetch = orig; };

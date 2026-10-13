@@ -62,7 +62,7 @@ async function logOnce(env, token, deps, msg) {
 }
 
 // Reads the optional Config tab (Key | Value). A missing tab just means "no extra sheets".
-async function readConfig(env, token, deps) {
+export async function readConfig(env, token, deps) {
   let rows;
   try { rows = await readTab(deps, env, token, env.SHEET_ID, 'Config'); }
   catch (e) { if (/Unable to parse range/i.test(e.body || '')) return {}; throw e; }
@@ -92,6 +92,34 @@ export async function runEntryProcessors(env, token, deps) {
     }
   }
   return report;
+}
+
+// Read-only preview for POST /entry/run {dry_run:true}: how many Entry rows are waiting (no Status yet) and how many are
+// stuck (PROCESSING / CHECK) on each sheet. Changes nothing. A sheet that cannot be read is reported, not hidden.
+export async function peekEntry(env, token, deps) {
+  const targets = [{ sheetId: env.SHEET_ID, tab: 'Entry', label: 'main' }];
+  try {
+    const cfg = await readConfig(env, token, deps);
+    if (cfg.WaynesboroEntrySheetId) targets.push({ sheetId: cfg.WaynesboroEntrySheetId, tab: cfg.WaynesboroEntryTab || 'Sales', label: 'waynesboro' });
+  } catch (e) { /* reported by the real run; the preview still covers the main sheet */ }
+  const out = {};
+  for (const t of targets) {
+    try {
+      const values = await readTab(deps, env, token, t.sheetId, t.tab);
+      const header = (values[0] || []).map(norm);
+      const st = header.indexOf('status');
+      const dataCols = ['action', 'location', 'product', 'qty'].map(n => header.indexOf(n)).filter(i => i >= 0);
+      let waiting = 0, stuck = 0;
+      for (let i = 1; i < values.length; i++) {
+        const r = values[i] || [];
+        const status = st >= 0 ? cell(r, st) : '';
+        if (status) { if (/^PROCESSING$|^CHECK/.test(status)) stuck++; continue; }
+        if (dataCols.some(ci => cell(r, ci) !== '')) waiting++;
+      }
+      out[t.label] = { waiting, stuck };
+    } catch (e) { out[t.label] = { error: String(e.message || e).slice(0, 150) }; }
+  }
+  return out;
 }
 
 export async function processEntrySheet(env, token, deps, t) {
